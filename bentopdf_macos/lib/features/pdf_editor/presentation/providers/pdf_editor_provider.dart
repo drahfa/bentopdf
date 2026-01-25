@@ -376,6 +376,69 @@ class PdfEditorNotifier extends StateNotifier<PdfEditorState> {
         imageData: annotation.imageData,
         bounds: newBounds,
       );
+    } else if (annotation is HighlightAnnotation) {
+      updatedAnnotation = HighlightAnnotation(
+        id: annotation.id,
+        pageNumber: annotation.pageNumber,
+        createdAt: annotation.createdAt,
+        bounds: newBounds,
+        color: annotation.color,
+        opacity: annotation.opacity,
+      );
+    } else if (annotation is ShapeAnnotation) {
+      updatedAnnotation = ShapeAnnotation(
+        id: annotation.id,
+        pageNumber: annotation.pageNumber,
+        createdAt: annotation.createdAt,
+        shapeType: annotation.shapeType,
+        bounds: newBounds,
+        color: annotation.color,
+        strokeWidth: annotation.strokeWidth,
+        opacity: annotation.opacity,
+        filled: annotation.filled,
+      );
+    } else if (annotation is InkAnnotation) {
+      // Calculate old bounds
+      final oldPoints = annotation.points;
+      if (oldPoints.isEmpty) return;
+
+      double minX = oldPoints.first.dx;
+      double minY = oldPoints.first.dy;
+      double maxX = oldPoints.first.dx;
+      double maxY = oldPoints.first.dy;
+
+      for (final point in oldPoints) {
+        if (point.dx < minX) minX = point.dx;
+        if (point.dy < minY) minY = point.dy;
+        if (point.dx > maxX) maxX = point.dx;
+        if (point.dy > maxY) maxY = point.dy;
+      }
+
+      final padding = annotation.thickness / 2;
+      final oldBounds = Rect.fromLTRB(
+        minX - padding,
+        minY - padding,
+        maxX + padding,
+        maxY + padding,
+      );
+
+      // Calculate delta and translate all points
+      final deltaX = newBounds.left - oldBounds.left;
+      final deltaY = newBounds.top - oldBounds.top;
+
+      final translatedPoints = oldPoints
+          .map((point) => Offset(point.dx + deltaX, point.dy + deltaY))
+          .toList();
+
+      updatedAnnotation = InkAnnotation(
+        id: annotation.id,
+        pageNumber: annotation.pageNumber,
+        createdAt: annotation.createdAt,
+        points: translatedPoints,
+        color: annotation.color,
+        thickness: annotation.thickness,
+        opacity: annotation.opacity,
+      );
     } else {
       return;
     }
@@ -388,6 +451,10 @@ class PdfEditorNotifier extends StateNotifier<PdfEditorState> {
     final annotations =
         _annotationService.getAnnotationsForPage(state.currentPageNumber);
     state = state.copyWith(currentPageAnnotations: annotations);
+  }
+
+  List<AnnotationBase> getAnnotationsForPage(int pageNumber) {
+    return _annotationService.getAnnotationsForPage(pageNumber);
   }
 
   Future<void> _loadImageForAnnotation(String id, Uint8List imageData) async {

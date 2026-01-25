@@ -18,6 +18,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Signature annotations (draw or upload)
   - Annotation selection, drag, resize, and delete
   - Real-time annotation preview while drawing
+  - All annotation types (stamps, signatures, highlights, shapes, ink) are selectable, movable, and deletable
+
+#### Annotation Interaction
+- **Resize Handles (Gizmos)** - Visual handles for manipulating annotations
+  - Corner handles for resizing annotations (20px, increased from 12px for better grabability)
+  - Center drag handle with gradient styling for easy movement
+  - Handles consume tap events to prevent accidental deselection
+  - 200ms protection window after drag operations to prevent gizmo disappearing
+
+- **Keyboard Navigation** - Precise annotation control with keyboard
+  - Arrow keys: Move selected annotation 1px per press
+  - Shift + Arrow keys: Move 10px per press for faster positioning
+  - Delete/Backspace: Remove selected annotation
+
+- **Intelligent Mode Switching** - Automatic tool mode changes for better UX
+  - Clicking on annotation → Switches to Select mode
+  - Clicking on empty space → Switches to Pan mode
+  - Maintains proper gesture handling in both modes
 
 #### UI/UX Enhancements
 - **Dark Glassmorphism Theme** - Modern dark blue/purple UI with glass effects
@@ -28,12 +46,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Improved Layout System**
   - Grid-based layout with dedicated panels
-  - Header with brand logo and action buttons
+  - Header with "PDF Editor" branding and action buttons
   - Left sidebar: Page thumbnails in single-column layout (160px width)
   - Main canvas area with annotation toolbar
-  - Right sidebar: Inspector panel showing document info and annotations (160px width)
+  - Right sidebar: Inspector panel showing document info and annotations (190px width)
   - Footer with status indicator and file information
   - Bottom controls bar for page navigation and zoom
+
+- **Interactive Inspector Sidebar** - Click to manage annotations
+  - Click annotation item to select it on canvas (gizmo appears)
+  - Delete button on each layer item for quick removal
+  - Visual feedback for selected annotations
+  - Live sync with canvas selection state
+
+- **Live Page Thumbnails** - Real-time preview in sidebar
+  - Thumbnails render actual PDF pages with all annotations
+  - Auto-updates when annotations are added, moved, or deleted
+  - White background for proper page display
+  - Loading indicators during thumbnail generation
+  - Highlights currently active page
 
 - **Navigation Tools**
   - Pan tool for canvas navigation (default mode)
@@ -50,9 +81,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Modern tool button styling with active states
 
 #### Window Management
-- Minimum window size set to 800×600 pixels
+- Minimum window size set to 1000×600 pixels (increased from 800px for better usability)
 - Default zoom level set to 50% for better initial view
-- Compact sidebar design (160px each) for more canvas space
+- Optimized sidebar design: Pages sidebar 160px, Inspector sidebar 190px
 
 #### Export & Persistence
 - Export annotated PDFs with all annotations rendered
@@ -70,6 +101,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Aspect Ratio** - Fixed PDF document stretching by unconstrained InteractiveViewer
 - **Stamp Aspect Ratio** - Fixed stamp image distortion by decoding and calculating proper bounds
 - **Export Quality** - Fixed stamps not appearing in exported PDFs by passing image cache to export service
+- **Gizmo Click Detection** - Fixed gizmo disappearing when clicked by adding tap event handlers and expanded bounds checking
+- **Post-Drag Deselection** - Fixed annotations deselecting immediately after drag with 200ms protection window
+- **Transparent Stamp Selection** - Fixed difficulty selecting stamps with transparent backgrounds by adding center drag handle
+- **Pan Mode Scrolling** - Fixed document not scrolling in pan mode by conditionally enabling gesture handlers
+- **Annotation Movement** - Fixed inability to move highlights, shapes, and ink annotations by implementing drag support for all types
 
 #### Layout Issues
 - Prevented aspect ratio distortion with `constrained: false` on InteractiveViewer
@@ -80,11 +116,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### UI Improvements
 - Reduced pages sidebar width from 320px to 160px (50% reduction)
-- Reduced inspector sidebar width from 320px to 160px (50% reduction)
+- Updated inspector sidebar width to 190px for better content display
 - Changed page thumbnails from 2-column to 1-column layout
 - Moved page navigation and zoom controls from top toolbar to bottom bar
 - Default tool changed from "Select" to "Pan" for better initial UX
 - Changed Select tool icon from pan_tool to touch_app for clarity
+- Updated header branding from "PDFcow Editor" to "PDF Editor"
+- Increased resize handle size from 12px to 20px for better usability
+- Added gradient-styled center drag handle (32px) for easier annotation movement
+- Added white background to page thumbnails for proper display
+- Increased minimum window width from 800px to 1000px
 
 #### Technical Improvements
 - Implemented deferred update pattern for smooth drag/resize operations
@@ -92,6 +133,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimized rendering with CustomPaint and AnnotationPainter
 - Image caching system for stamp and signature annotations
 - Aspect ratio preservation through image decoding
+- Conditional gesture handling to prevent conflicts between pan and annotation modes
+- Keyboard event handling with Focus widget for arrow key navigation
+- Tap event consumption on gizmo handles to prevent propagation
+- Expanded bounds checking for reliable annotation selection (25px buffer)
+- Time-based tap filtering (200ms window) after drag operations
+- Live thumbnail rendering with FutureBuilder and async page rendering
+- All annotation types support bounds updates for drag/resize operations
+- Ink annotation point translation for movement while preserving shape
 
 ### Technical Details
 

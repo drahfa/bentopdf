@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../domain/models/annotation_base.dart';
 import '../../domain/models/signature_annotation.dart';
 import '../../domain/models/stamp_annotation.dart';
+import '../../domain/models/highlight_annotation.dart';
+import '../../domain/models/shape_annotation.dart';
+import '../../domain/models/ink_annotation.dart';
 
 class AnnotationResizeHandles extends StatefulWidget {
   final AnnotationBase? selectedAnnotation;
@@ -27,6 +30,9 @@ class _AnnotationResizeHandlesState extends State<AnnotationResizeHandles> {
   Rect? _currentBounds;
   ResizeHandle? _activeHandle;
   Offset? _dragStart;
+  bool _isDraggingCenter = false;
+  Offset? _centerDragStart;
+  Rect? _centerDragOriginalBounds;
 
   @override
   void didUpdateWidget(AnnotationResizeHandles oldWidget) {
@@ -35,6 +41,9 @@ class _AnnotationResizeHandlesState extends State<AnnotationResizeHandles> {
       _currentBounds = null;
       _activeHandle = null;
       _dragStart = null;
+      _isDraggingCenter = false;
+      _centerDragStart = null;
+      _centerDragOriginalBounds = null;
     }
   }
 
@@ -44,6 +53,33 @@ class _AnnotationResizeHandlesState extends State<AnnotationResizeHandles> {
       return annotation.bounds;
     } else if (annotation is SignatureAnnotation) {
       return annotation.bounds;
+    } else if (annotation is HighlightAnnotation) {
+      return annotation.bounds;
+    } else if (annotation is ShapeAnnotation) {
+      return annotation.bounds;
+    } else if (annotation is InkAnnotation) {
+      // Calculate bounds from ink points
+      if (annotation.points.isEmpty) return null;
+      double minX = annotation.points.first.dx;
+      double minY = annotation.points.first.dy;
+      double maxX = annotation.points.first.dx;
+      double maxY = annotation.points.first.dy;
+
+      for (final point in annotation.points) {
+        if (point.dx < minX) minX = point.dx;
+        if (point.dy < minY) minY = point.dy;
+        if (point.dx > maxX) maxX = point.dx;
+        if (point.dy > maxY) maxY = point.dy;
+      }
+
+      // Add padding for thickness
+      final padding = annotation.thickness / 2;
+      return Rect.fromLTRB(
+        minX - padding,
+        minY - padding,
+        maxX + padding,
+        maxY + padding,
+      );
     }
     return null;
   }
@@ -60,12 +96,13 @@ class _AnnotationResizeHandlesState extends State<AnnotationResizeHandles> {
     return Stack(
       children: [
         ..._buildResizeHandles(bounds),
+        _buildCenterDragHandle(bounds),
       ],
     );
   }
 
   List<Widget> _buildResizeHandles(Rect bounds) {
-    const handleSize = 12.0;
+    const handleSize = 20.0;
     final handles = <Widget>[];
 
     final positions = {
@@ -85,6 +122,13 @@ class _AnnotationResizeHandlesState extends State<AnnotationResizeHandles> {
           left: position.dx - handleSize / 2,
           top: position.dy - handleSize / 2,
           child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: (_) {
+              // Consume tap event to prevent canvas from deselecting
+            },
+            onTap: () {
+              // Consume tap event to prevent canvas from deselecting
+            },
             onPanStart: (details) => _onResizeStart(handle, bounds, details),
             onPanUpdate: _onResizeUpdate,
             onPanEnd: _onResizeEnd,
@@ -94,7 +138,14 @@ class _AnnotationResizeHandlesState extends State<AnnotationResizeHandles> {
               decoration: BoxDecoration(
                 color: Colors.blue,
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
+                border: Border.all(color: Colors.white, width: 2.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
             ),
           ),
@@ -202,6 +253,89 @@ class _AnnotationResizeHandlesState extends State<AnnotationResizeHandles> {
     setState(() {
       _activeHandle = null;
       _dragStart = null;
+      _currentBounds = null;
+    });
+  }
+
+  Widget _buildCenterDragHandle(Rect bounds) {
+    const handleSize = 32.0;
+    final center = bounds.center;
+
+    return Positioned(
+      left: center.dx - handleSize / 2,
+      top: center.dy - handleSize / 2,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) {
+          // Consume tap event to prevent canvas from deselecting
+        },
+        onTap: () {
+          // Consume tap event to prevent canvas from deselecting
+        },
+        onPanStart: (details) => _onCenterDragStart(bounds, details),
+        onPanUpdate: _onCenterDragUpdate,
+        onPanEnd: _onCenterDragEnd,
+        child: Container(
+          width: handleSize,
+          height: handleSize,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF7C5CFF),
+                Color(0xFF22C55E),
+              ],
+            ),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.drag_indicator,
+            color: Colors.white,
+            size: 18,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _onCenterDragStart(Rect bounds, DragStartDetails details) {
+    setState(() {
+      _isDraggingCenter = true;
+      _centerDragStart = details.localPosition;
+      _centerDragOriginalBounds = bounds;
+    });
+  }
+
+  void _onCenterDragUpdate(DragUpdateDetails details) {
+    if (!_isDraggingCenter || _centerDragStart == null || _centerDragOriginalBounds == null) {
+      return;
+    }
+
+    setState(() {
+      final delta = details.localPosition - _centerDragStart!;
+      final newBounds = _centerDragOriginalBounds!.shift(delta);
+      _currentBounds = newBounds;
+      widget.onBoundsUpdate(newBounds);
+    });
+  }
+
+  void _onCenterDragEnd(DragEndDetails details) {
+    if (_currentBounds != null) {
+      widget.onBoundsCommit(_currentBounds!);
+    }
+    setState(() {
+      _isDraggingCenter = false;
+      _centerDragStart = null;
+      _centerDragOriginalBounds = null;
       _currentBounds = null;
     });
   }

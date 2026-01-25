@@ -1,9 +1,12 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/pdf_editor_theme.dart';
 import '../../../../shared/widgets/glass_panel.dart';
 import '../../../../shared/services/canvas_annotation_service.dart';
 import '../providers/pdf_editor_provider.dart';
+import 'stamp_dialog.dart';
+import 'signature_dialog.dart';
 
 class PdfEditorToolbar extends ConsumerWidget {
   const PdfEditorToolbar({super.key});
@@ -64,13 +67,13 @@ class PdfEditorToolbar extends ConsumerWidget {
                     label: 'Stamp',
                     icon: Icons.image,
                     isActive: state.selectedTool == AnnotationTool.stamp,
-                    onPressed: () => notifier.selectTool(AnnotationTool.stamp),
+                    onPressed: () => _showStampDialog(context, ref),
                   ),
                   _buildTool(
                     label: 'Signature',
                     icon: Icons.edit,
                     isActive: state.selectedTool == AnnotationTool.signature,
-                    onPressed: () => notifier.selectTool(AnnotationTool.signature),
+                    onPressed: () => _showSignatureDialog(context, ref),
                   ),
                   if (state.selectedAnnotationId != null) ...[
                     _buildDivider(),
@@ -174,4 +177,27 @@ class PdfEditorToolbar extends ConsumerWidget {
     );
   }
 
+  Future<void> _showStampDialog(BuildContext context, WidgetRef ref) async {
+    final result = await showDialog<Uint8List>(
+      context: context,
+      builder: (context) => const StampDialog(),
+    );
+
+    if (result != null) {
+      final notifier = ref.read(pdfEditorProvider.notifier);
+      notifier.startStampPlacement(result);
+    }
+  }
+
+  Future<void> _showSignatureDialog(BuildContext context, WidgetRef ref) async {
+    final result = await showDialog<Uint8List>(
+      context: context,
+      builder: (context) => const SignatureDialog(),
+    );
+
+    if (result != null) {
+      final notifier = ref.read(pdfEditorProvider.notifier);
+      notifier.startSignaturePlacement(result);
+    }
+  }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/painters/annotation_painter.dart';
 import '../providers/pdf_editor_provider.dart';
@@ -28,6 +29,8 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
   Rect? _tempBounds;
   bool _isDragging = false;
   late TransformationController _transformationController;
+  final FocusNode _focusNode = FocusNode();
+  DateTime? _lastDragEndTime;
 
   @override
   void initState() {
@@ -38,6 +41,7 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
   @override
   void dispose() {
     _transformationController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -65,32 +69,36 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
       }
     });
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.white.withOpacity(0.02),
-              Colors.white.withOpacity(0.01),
+    return Focus(
+      focusNode: _focusNode,
+      autofocus: true,
+      onKeyEvent: (node, event) => _handleKeyEvent(event, notifier, state),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white.withOpacity(0.02),
+                Colors.white.withOpacity(0.01),
+              ],
+            ),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.12),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.35),
+                blurRadius: 60,
+                offset: const Offset(0, 20),
+              ),
             ],
           ),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.12),
-            width: 1,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.35),
-              blurRadius: 60,
-              offset: const Offset(0, 20),
-            ),
-          ],
-        ),
-        child: InteractiveViewer(
+          child: InteractiveViewer(
         transformationController: _transformationController,
         minScale: 0.5,
         maxScale: 3.0,
@@ -177,24 +185,20 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
                   }
                 },
                 child: GestureDetector(
-                  behavior: state.selectedTool == AnnotationTool.pan
-                      ? HitTestBehavior.deferToChild
-                      : HitTestBehavior.translucent,
-                  onPanStart: state.selectedTool != AnnotationTool.pan
+                  behavior: HitTestBehavior.translucent,
+                  onPanStart: _shouldHandleGestures(state)
                       ? (details) =>
                           _onPanStart(details.localPosition, notifier, state)
                       : null,
-                  onPanUpdate: state.selectedTool != AnnotationTool.pan
+                  onPanUpdate: _shouldHandleGestures(state)
                       ? (details) =>
                           _onPanUpdate(details.localPosition, notifier, state)
                       : null,
-                  onPanEnd: state.selectedTool != AnnotationTool.pan
+                  onPanEnd: _shouldHandleGestures(state)
                       ? (details) => _onPanEnd(notifier, state)
                       : null,
-                  onTapDown: state.selectedTool != AnnotationTool.pan
-                      ? (details) =>
-                          _onTapDown(details.localPosition, notifier, state)
-                      : null,
+                  onTapDown: (details) =>
+                      _onTapDown(details.localPosition, notifier, state),
                   child: Stack(
                   children: [
                     CustomPaint(
@@ -224,6 +228,7 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
                           );
                           setState(() {
                             _tempBounds = null;
+                            _lastDragEndTime = DateTime.now();
                           });
                         }
                       },
@@ -239,6 +244,7 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
         ),
       ),
       ),
+      ),
     );
   }
 
@@ -247,15 +253,15 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
     PdfEditorNotifier notifier,
     PdfEditorState state,
   ) {
+    // Check if we're dragging a selected annotation (highest priority)
     final selectedAnnotation = state.currentPageAnnotations
         .where((a) => a.id == state.selectedAnnotationId)
         .firstOrNull;
 
-    if (selectedAnnotation != null &&
-        (selectedAnnotation is StampAnnotation ||
-            selectedAnnotation is SignatureAnnotation)) {
+    if (selectedAnnotation != null) {
       final bounds = _getAnnotationBounds(selectedAnnotation);
       if (bounds != null && bounds.contains(position)) {
+        // Allow dragging all annotation types
         setState(() {
           _isDragging = true;
           _dragStartOffset = position;
@@ -266,11 +272,17 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
       }
     }
 
-    if (state.selectedTool == AnnotationTool.none ||
-        state.selectedTool == AnnotationTool.pan) {
+    // If in Pan mode and not dragging an annotation, let InteractiveViewer handle it
+    if (state.selectedTool == AnnotationTool.pan) {
       return;
     }
 
+    // If in Select mode with no annotation selected, do nothing
+    if (state.selectedTool == AnnotationTool.none) {
+      return;
+    }
+
+    // Handle annotation creation (ink, shapes, highlights)
     setState(() {
       if (state.selectedTool == AnnotationTool.ink) {
         _currentInkPoints = [position];
@@ -285,6 +297,33 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
       return annotation.bounds;
     } else if (annotation is SignatureAnnotation) {
       return annotation.bounds;
+    } else if (annotation is HighlightAnnotation) {
+      return annotation.bounds;
+    } else if (annotation is ShapeAnnotation) {
+      return annotation.bounds;
+    } else if (annotation is InkAnnotation) {
+      // Calculate bounds from ink points
+      if (annotation.points.isEmpty) return null;
+      double minX = annotation.points.first.dx;
+      double minY = annotation.points.first.dy;
+      double maxX = annotation.points.first.dx;
+      double maxY = annotation.points.first.dy;
+
+      for (final point in annotation.points) {
+        if (point.dx < minX) minX = point.dx;
+        if (point.dy < minY) minY = point.dy;
+        if (point.dx > maxX) maxX = point.dx;
+        if (point.dy > maxY) maxY = point.dy;
+      }
+
+      // Add padding for thickness
+      final padding = annotation.thickness / 2;
+      return Rect.fromLTRB(
+        minX - padding,
+        minY - padding,
+        maxX + padding,
+        maxY + padding,
+      );
     }
     return null;
   }
@@ -294,6 +333,7 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
     PdfEditorNotifier notifier,
     PdfEditorState state,
   ) {
+    // If dragging an annotation, update temp bounds
     if (_isDragging && _dragStartOffset != null && _originalBounds != null) {
       final delta = position - _dragStartOffset!;
       setState(() {
@@ -302,11 +342,13 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
       return;
     }
 
-    if (state.selectedTool == AnnotationTool.none ||
-        state.selectedTool == AnnotationTool.pan) {
+    // If in Pan or Select mode, let InteractiveViewer handle it
+    if (state.selectedTool == AnnotationTool.pan ||
+        state.selectedTool == AnnotationTool.none) {
       return;
     }
 
+    // Handle annotation drawing (ink, shapes, highlights)
     setState(() {
       _currentDrawPoint = position;
       if (state.selectedTool == AnnotationTool.ink) {
@@ -316,6 +358,7 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
   }
 
   void _onPanEnd(PdfEditorNotifier notifier, PdfEditorState state) {
+    // If we were dragging an annotation, commit the changes
     if (_isDragging && _tempBounds != null && state.selectedAnnotationId != null) {
       notifier.updateAnnotationBounds(state.selectedAnnotationId!, _tempBounds!);
       setState(() {
@@ -323,15 +366,21 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
         _dragStartOffset = null;
         _originalBounds = null;
         _tempBounds = null;
+        _lastDragEndTime = DateTime.now();
       });
       return;
     }
 
-    if (state.selectedTool == AnnotationTool.none ||
-        state.selectedTool == AnnotationTool.pan) {
+    // If in Pan or Select mode, let InteractiveViewer handle it
+    if (state.selectedTool == AnnotationTool.pan ||
+        state.selectedTool == AnnotationTool.none) {
+      setState(() {
+        _lastDragEndTime = DateTime.now();
+      });
       return;
     }
 
+    // Complete annotation creation (ink, shapes, highlights)
     if (state.selectedTool == AnnotationTool.ink && _currentInkPoints.isNotEmpty) {
       notifier.addInkAnnotation(_currentInkPoints);
     } else if (_drawingStartPoint != null && _currentDrawPoint != null) {
@@ -356,6 +405,7 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
       _currentInkPoints = [];
       _drawingStartPoint = null;
       _currentDrawPoint = null;
+      _lastDragEndTime = DateTime.now();
     });
   }
 
@@ -364,24 +414,84 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
     PdfEditorNotifier notifier,
     PdfEditorState state,
   ) {
-    for (final annotation in state.currentPageAnnotations.reversed) {
-      if (annotation is StampAnnotation || annotation is SignatureAnnotation) {
-        final bounds = (annotation is StampAnnotation)
-            ? annotation.bounds
-            : (annotation as SignatureAnnotation).bounds;
+    // Ignore taps that occur within 200ms of a drag ending (prevents accidental deselection)
+    if (_lastDragEndTime != null) {
+      final timeSinceDrag = DateTime.now().difference(_lastDragEndTime!);
+      if (timeSinceDrag.inMilliseconds < 200) {
+        return;
+      }
+    }
 
-        if (bounds.contains(position)) {
-          notifier.selectAnnotation(annotation.id);
-          return;
+    // Before anything else, check if we're clicking on handles of the selected annotation
+    if (state.selectedAnnotationId != null) {
+      final selectedAnnotation = state.currentPageAnnotations
+          .where((a) => a.id == state.selectedAnnotationId)
+          .firstOrNull;
+      if (selectedAnnotation != null) {
+        final bounds = _getAnnotationBounds(selectedAnnotation);
+        if (bounds != null) {
+          // Check if clicking on center handle (32px at center)
+          const centerHandleSize = 32.0;
+          final center = bounds.center;
+          final centerHandleRect = Rect.fromCenter(
+            center: center,
+            width: centerHandleSize,
+            height: centerHandleSize,
+          );
+          if (centerHandleRect.contains(position)) {
+            // Clicked on center handle, don't deselect
+            return;
+          }
+
+          // Check if clicking on resize handles (20px at corners/edges)
+          const resizeHandleSize = 20.0;
+          final handlePositions = [
+            bounds.topLeft,
+            bounds.topRight,
+            bounds.bottomLeft,
+            bounds.bottomRight,
+            bounds.centerLeft,
+            bounds.centerRight,
+            bounds.topCenter,
+            bounds.bottomCenter,
+          ];
+
+          for (final handlePos in handlePositions) {
+            final handleRect = Rect.fromCenter(
+              center: handlePos,
+              width: resizeHandleSize,
+              height: resizeHandleSize,
+            );
+            if (handleRect.contains(position)) {
+              // Clicked on resize handle, don't deselect
+              return;
+            }
+          }
         }
       }
     }
 
-    if (state.selectedTool == AnnotationTool.none) {
+    // Check if tapping on any annotation to select it
+    for (final annotation in state.currentPageAnnotations.reversed) {
+      final bounds = _getAnnotationBounds(annotation);
+      if (bounds != null && bounds.contains(position)) {
+        notifier.selectAnnotation(annotation.id);
+        // Switch to Select mode when annotation is clicked
+        notifier.selectTool(AnnotationTool.none);
+        return;
+      }
+    }
+
+    // Tapped on empty space
+    if (state.selectedTool == AnnotationTool.none ||
+        state.selectedTool == AnnotationTool.pan) {
       notifier.selectAnnotation(null);
+      // Switch to Pan mode when document (empty space) is clicked
+      notifier.selectTool(AnnotationTool.pan);
       return;
     }
 
+    // Handle comment tool
     if (state.selectedTool == AnnotationTool.comment) {
       _showCommentDialog(context, position, notifier);
     }
@@ -446,6 +556,15 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
     return annotations;
   }
 
+  bool _shouldHandleGestures(PdfEditorState state) {
+    // In pan mode, only handle gestures if an annotation is selected or we're actively dragging
+    if (state.selectedTool == AnnotationTool.pan) {
+      return state.selectedAnnotationId != null || _isDragging;
+    }
+    // In other modes, always handle gestures
+    return true;
+  }
+
   void _showCommentDialog(
     BuildContext context,
     Offset position,
@@ -484,6 +603,64 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
         ],
       ),
     );
+  }
+
+  KeyEventResult _handleKeyEvent(
+    KeyEvent event,
+    PdfEditorNotifier notifier,
+    PdfEditorState state,
+  ) {
+    // Only handle key down events
+    if (event is! KeyDownEvent) {
+      return KeyEventResult.ignored;
+    }
+
+    // Only handle arrow keys when an annotation is selected
+    if (state.selectedAnnotationId == null) {
+      return KeyEventResult.ignored;
+    }
+
+    final selectedAnnotation = state.currentPageAnnotations
+        .where((a) => a.id == state.selectedAnnotationId)
+        .firstOrNull;
+
+    if (selectedAnnotation == null) {
+      return KeyEventResult.ignored;
+    }
+
+    final bounds = _getAnnotationBounds(selectedAnnotation);
+    if (bounds == null) {
+      return KeyEventResult.ignored;
+    }
+
+    // Determine move distance (10px with shift, 1px without)
+    final moveDistance = HardwareKeyboard.instance.isShiftPressed ? 10.0 : 1.0;
+
+    Offset delta = Offset.zero;
+
+    // Handle arrow keys
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      delta = Offset(-moveDistance, 0);
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      delta = Offset(moveDistance, 0);
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      delta = Offset(0, -moveDistance);
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      delta = Offset(0, moveDistance);
+    } else if (event.logicalKey == LogicalKeyboardKey.delete ||
+        event.logicalKey == LogicalKeyboardKey.backspace) {
+      // Delete selected annotation
+      notifier.deleteAnnotation(state.selectedAnnotationId!);
+      return KeyEventResult.handled;
+    } else {
+      return KeyEventResult.ignored;
+    }
+
+    // Apply the movement
+    final newBounds = bounds.shift(delta);
+    notifier.updateAnnotationBounds(state.selectedAnnotationId!, newBounds);
+
+    return KeyEventResult.handled;
   }
 
 }

@@ -82,7 +82,7 @@ class PdfEditorHeader extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'PDFcow Editor',
+                'PDF Editor',
                 style: TextStyle(
                   color: PdfEditorTheme.text,
                   fontSize: 14,

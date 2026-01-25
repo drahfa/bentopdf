@@ -83,61 +83,98 @@ class PdfInspectorSidebar extends ConsumerWidget {
 
         // Annotations card
         if (state.currentPageAnnotations.isNotEmpty)
-          _buildCard(
-            title: 'Annotations',
-            subtitle: '${state.currentPageAnnotations.length}',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: state.currentPageAnnotations.map((annotation) {
-                final isSelected = annotation.id == state.selectedAnnotationId;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? PdfEditorTheme.accent.withOpacity(0.12)
-                          : Colors.white.withOpacity(0.04),
-                      border: Border.all(
-                        color: isSelected
-                            ? PdfEditorTheme.accent.withOpacity(0.35)
-                            : Colors.white.withOpacity(0.08),
-                        width: 1,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _getAnnotationIcon(annotation.type),
-                          size: 14,
-                          color: isSelected
-                              ? PdfEditorTheme.accent
-                              : PdfEditorTheme.muted,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            _getAnnotationLabel(annotation.type),
-                            style: TextStyle(
-                              color: isSelected
-                                  ? PdfEditorTheme.text
-                                  : PdfEditorTheme.muted,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+          _buildAnnotationsCard(state),
+      ],
+    );
+  }
+
+  Widget _buildAnnotationsCard(PdfEditorState state) {
+    return _buildCard(
+      title: 'Annotations',
+      subtitle: '${state.currentPageAnnotations.length}',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: state.currentPageAnnotations.map((annotation) {
+          return _buildAnnotationItem(annotation, state);
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildAnnotationItem(AnnotationBase annotation, PdfEditorState state) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final notifier = ref.read(pdfEditorProvider.notifier);
+        final isSelected = annotation.id == state.selectedAnnotationId;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => notifier.selectAnnotation(annotation.id),
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? PdfEditorTheme.accent.withOpacity(0.12)
+                      : Colors.white.withOpacity(0.04),
+                  border: Border.all(
+                    color: isSelected
+                        ? PdfEditorTheme.accent.withOpacity(0.35)
+                        : Colors.white.withOpacity(0.08),
+                    width: 1,
                   ),
-                );
-              }).toList(),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _getAnnotationIcon(annotation.type),
+                      size: 14,
+                      color: isSelected
+                          ? PdfEditorTheme.accent
+                          : PdfEditorTheme.muted,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        _getAnnotationLabel(annotation.type),
+                        style: TextStyle(
+                          color: isSelected
+                              ? PdfEditorTheme.text
+                              : PdfEditorTheme.muted,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                    // Delete button
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        iconSize: 14,
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: PdfEditorTheme.danger.withOpacity(0.75),
+                        ),
+                        onPressed: () {
+                          notifier.deleteAnnotation(annotation.id);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-      ],
+        );
+      },
     );
   }
 
