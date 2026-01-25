@@ -1,5 +1,5 @@
-name: bentopdf_macos
-description: "Native Flutter macOS port of BentoPDF - 95+ PDF tools"
+name: pdfcow
+description: "PDFcow: PDF Editor - Native macOS PDF toolkit with 95+ tools"
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -27,6 +27,7 @@ dependencies:
   # PDF Core
   pdf: ^3.11.0
   printing: ^5.13.0
+  pdfx: ^2.8.0
 
   # File Operations
   file_picker: ^8.1.4

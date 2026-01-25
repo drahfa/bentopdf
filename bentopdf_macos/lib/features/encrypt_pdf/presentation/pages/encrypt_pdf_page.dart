@@ -1,0 +1,171 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pdfcow/features/encrypt_pdf/presentation/providers/encrypt_pdf_provider.dart';
+import 'package:pdfcow/shared/widgets/pdf_file_selector.dart';
+
+class EncryptPdfPage extends ConsumerWidget {
+  const EncryptPdfPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(encryptPdfProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Encrypt PDF'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (state.error != null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(state.error!)),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () =>
+                          ref.read(encryptPdfProvider.notifier).clearError(),
+                    ),
+                  ],
+                ),
+              ),
+            if (state.successMessage != null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(state.successMessage!)),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () =>
+                          ref.read(encryptPdfProvider.notifier).clearSuccess(),
+                    ),
+                  ],
+                ),
+              ),
+            PdfFileSelector(
+              selectedFilePath: state.filePath,
+              onSelectFile: () =>
+                  ref.read(encryptPdfProvider.notifier).selectFile(),
+              emptyStateTitle: 'Protect your PDF with a password',
+              emptyStateSubtitle: 'Drop a PDF here or click to browse',
+            ),
+            const SizedBox(height: 16),
+            if (state.filePath != null)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.lock, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Set Password',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Password',
+                          hintText: 'Enter password (min. 6 characters)',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.lock_outline),
+                        ),
+                        onChanged: (value) =>
+                            ref.read(encryptPdfProvider.notifier).setPassword(value),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Confirm Password',
+                          hintText: 'Re-enter password',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.lock_outline),
+                        ),
+                        onChanged: (value) => ref
+                            .read(encryptPdfProvider.notifier)
+                            .setConfirmPassword(value),
+                      ),
+                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.blue.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Note: Encryption converts each page to an image. '
+                                'The output file may be larger than the original.',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.blue,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: state.isProcessing
+                              ? null
+                              : () => ref
+                                  .read(encryptPdfProvider.notifier)
+                                  .encryptPdf(),
+                          icon: state.isProcessing
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.lock),
+                          label: Text(
+                              state.isProcessing ? 'Encrypting...' : 'Encrypt PDF'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

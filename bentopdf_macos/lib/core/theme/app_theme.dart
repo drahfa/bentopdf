@@ -12,13 +12,13 @@ class AppTheme {
       brightness: Brightness.dark,
       colorScheme: ColorScheme.dark(
         primary: _primary,
-        secondary: _primary.withOpacity(0.8),
+        secondary: _primary.withValues(alpha: 0.8),
         surface: _darkBackground,
         onPrimary: Colors.white,
         onSurface: _textColor,
       ),
       scaffoldBackgroundColor: _darkBackground,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: _cardColor,
         elevation: 2,
         shape: RoundedRectangleBorder(

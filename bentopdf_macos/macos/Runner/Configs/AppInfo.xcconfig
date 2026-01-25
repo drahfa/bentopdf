@@ -5,10 +5,10 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = bentopdf_macos
+PRODUCT_NAME = PDFcow PDF Editor
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.bentopdf.bentopdfMacos
+PRODUCT_BUNDLE_IDENTIFIER = com.vsg.pdfcow
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.bentopdf. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 VSG. All rights reserved.

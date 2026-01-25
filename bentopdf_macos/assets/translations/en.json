@@ -1,0 +1,161 @@
+{
+  "app": {
+    "title": "PDFcow: PDF Editor",
+    "tagline": "Your Friendly PDF Editor",
+    "subtitle": "Merge, split, rotate, organize, and secure your documents — all completely free. No uploads, no subscriptions, just powerful PDF tools running natively on your Mac."
+  },
+  "common": {
+    "select_file": "Choose PDF File",
+    "change": "Change",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "clear": "Clear",
+    "clear_all": "Clear All",
+    "select_all": "Select All",
+    "add_more": "Add More",
+    "pages": "pages",
+    "page": "page",
+    "processing": "Processing...",
+    "success": "Success!",
+    "error": "Error",
+    "close": "Close"
+  },
+  "tools": {
+    "merge_pdf": {
+      "name": "Merge PDF",
+      "description": "Combine multiple PDFs into one",
+      "empty_state": "Drag and drop PDF files here",
+      "or": "or",
+      "select_files": "Select Files",
+      "files_selected": "file(s) selected",
+      "merge_button": "Merge PDFs",
+      "merging": "Merging...",
+      "success": "PDF merged successfully!",
+      "error_min_files": "Please add at least 2 PDF files"
+    },
+    "split_pdf": {
+      "name": "Split PDF",
+      "description": "Extract page ranges",
+      "empty_title": "Split your PDF into parts",
+      "empty_subtitle": "Drop a PDF here or click to browse",
+      "page_range": "Page Range",
+      "start_page": "Start Page",
+      "end_page": "End Page",
+      "split_button": "Split PDF",
+      "splitting": "Splitting...",
+      "success": "PDF split successfully!",
+      "error_invalid_range": "Invalid page range. Must be 1-{count}",
+      "error_invalid_numbers": "Please enter valid page numbers"
+    },
+    "rotate_pdf": {
+      "name": "Rotate PDF",
+      "description": "Rotate pages 90 degrees",
+      "empty_title": "Rotate your PDF pages",
+      "empty_subtitle": "Drop a PDF here or click to browse",
+      "rotation_angle": "Rotation Angle",
+      "rotate_button": "Rotate PDF",
+      "rotating": "Rotating...",
+      "success": "PDF rotated successfully!"
+    },
+    "delete_pages": {
+      "name": "Delete Pages",
+      "description": "Remove unwanted pages",
+      "empty_title": "Remove unwanted pages",
+      "empty_subtitle": "Drop a PDF here or click to browse",
+      "pages_selected": "page(s) selected",
+      "delete_button": "Delete Pages",
+      "deleting": "Deleting...",
+      "success": "Pages deleted successfully!",
+      "error_select_pages": "Please select pages to delete",
+      "error_all_pages": "Cannot delete all pages"
+    },
+    "extract_pages": {
+      "name": "Extract Pages",
+      "description": "Save specific pages",
+      "empty_title": "Extract specific pages",
+      "empty_subtitle": "Drop a PDF here or click to browse",
+      "select_instruction": "Select pages to extract",
+      "extract_button": "Extract Pages",
+      "extracting": "Extracting...",
+      "success": "Pages extracted successfully!",
+      "error_select_pages": "Please select pages to extract"
+    },
+    "organize_pdf": {
+      "name": "Organize PDF",
+      "description": "Drag-drop reorder/duplicate",
+      "empty_title": "Reorder and organize pages",
+      "empty_subtitle": "Drop a PDF here or click to browse",
+      "instruction": "Drag to reorder • Tap to duplicate or delete",
+      "duplicate": "Duplicate",
+      "save_button": "Save PDF",
+      "saving": "Saving...",
+      "success": "PDF organized successfully!",
+      "error_no_pages": "No pages to save",
+      "error_delete_all": "Cannot delete all pages"
+    },
+    "encrypt_pdf": {
+      "name": "Encrypt PDF",
+      "description": "Password protection",
+      "empty_title": "Protect your PDF with a password",
+      "empty_subtitle": "Drop a PDF here or click to browse",
+      "set_password": "Set Password",
+      "password": "Password",
+      "password_hint": "Enter password (min. 6 characters)",
+      "confirm_password": "Confirm Password",
+      "confirm_hint": "Re-enter password",
+      "note": "Note: Encryption converts each page to an image. The output file may be larger than the original.",
+      "encrypt_button": "Encrypt PDF",
+      "encrypting": "Encrypting...",
+      "success": "PDF encrypted successfully!",
+      "error_no_password": "Please enter a password",
+      "error_short_password": "Password must be at least 6 characters",
+      "error_mismatch": "Passwords do not match"
+    },
+    "decrypt_pdf": {
+      "name": "Decrypt PDF",
+      "description": "Remove password",
+      "empty_title": "Remove password protection",
+      "empty_subtitle": "Drop an encrypted PDF here or click to browse",
+      "enter_password": "Enter Password",
+      "password_hint": "Enter the PDF password",
+      "note": "This will remove password protection and save an unencrypted version of your PDF.",
+      "decrypt_button": "Decrypt PDF",
+      "decrypting": "Decrypting...",
+      "success": "PDF decrypted successfully!",
+      "error_no_password": "Please enter the password"
+    },
+    "pdf_to_images": {
+      "name": "PDF to Images",
+      "description": "Export as JPG/PNG",
+      "empty_title": "Export PDF pages as images",
+      "empty_subtitle": "Drop a PDF here or click to browse",
+      "image_format": "Image Format",
+      "png_format": "PNG (Lossless)",
+      "jpg_format": "JPG (Smaller size)",
+      "quality": "Quality: {value}%",
+      "note": "Each page will be saved as a separate image file. Choose a folder to save all images.",
+      "convert_button": "Convert to Images",
+      "converting": "Converting...",
+      "success": "{count} image(s) saved successfully!"
+    },
+    "images_to_pdf": {
+      "name": "Images to PDF",
+      "description": "Create PDF from images",
+      "empty_state": "Drag and drop images here",
+      "or": "or",
+      "select_images": "Select Images",
+      "supported_formats": "Supported formats: JPG, PNG, GIF, BMP",
+      "instruction": "Drag to reorder images • Each image becomes a page",
+      "images_selected": "image(s) selected",
+      "create_button": "Create PDF",
+      "creating": "Creating...",
+      "success": "PDF created successfully!",
+      "error_no_images": "Please add at least one image"
+    },
+    "pdf_editor": {
+      "name": "PDF Editor",
+      "description": "Annotate and edit PDFs"
+    }
+  }
+}
