@@ -40,15 +40,20 @@ class OrganizePdfPage extends ConsumerWidget {
                 _buildHeader(context),
                 if (state.error != null) _buildErrorBanner(ref, state),
                 if (state.successMessage != null) _buildSuccessBanner(ref, state),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: PdfFileSelector(
-                    selectedFilePath: state.filePath,
-                    pageCount: state.pages.length,
-                    onSelectFile: () =>
-                        ref.read(organizePdfProvider.notifier).selectFile(),
-                    emptyStateTitle: 'Reorder and organize pages',
-                    emptyStateSubtitle: 'Drop a PDF here or click to browse',
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Padding(
+                      padding: const EdgeInsets.all(40),
+                      child: PdfFileSelector(
+                        selectedFilePath: state.filePath,
+                        pageCount: state.pages.length,
+                        onSelectFile: () =>
+                            ref.read(organizePdfProvider.notifier).selectFile(),
+                        emptyStateTitle: 'Reorder and organize pages',
+                        emptyStateSubtitle: 'Drop a PDF here or click to browse',
+                      ),
+                    ),
                   ),
                 ),
                 if (state.filePath != null && state.pages.isNotEmpty)
@@ -288,14 +293,27 @@ class OrganizePdfPage extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
-                    'Organize PDF',
-                    style: TextStyle(
-                      color: PdfEditorTheme.text,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Organize PDF',
+                        style: TextStyle(
+                          color: PdfEditorTheme.text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      Text(
+                        'Reorder Pages',
+                        style: TextStyle(
+                          color: PdfEditorTheme.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

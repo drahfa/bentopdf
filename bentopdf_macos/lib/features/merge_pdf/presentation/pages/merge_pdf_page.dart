@@ -115,14 +115,27 @@ class MergePdfPage extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
-                    'Merge PDF',
-                    style: TextStyle(
-                      color: PdfEditorTheme.text,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Merge PDF',
+                        style: TextStyle(
+                          color: PdfEditorTheme.text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      Text(
+                        'Combine Multiple PDFs',
+                        style: TextStyle(
+                          color: PdfEditorTheme.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

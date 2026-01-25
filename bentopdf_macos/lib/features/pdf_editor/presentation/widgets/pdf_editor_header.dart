@@ -105,6 +105,13 @@ class PdfEditorHeader extends ConsumerWidget {
                 ),
               ],
             ),
+            child: const Center(
+              child: Icon(
+                Icons.edit,
+                size: 20,
+                color: Colors.white,
+              ),
+            ),
           ),
           const SizedBox(width: 10),
           // Title

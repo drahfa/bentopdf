@@ -121,11 +121,18 @@ class HomePage extends StatelessWidget {
                 ),
               ],
             ),
+            child: const Center(
+              child: Icon(
+                Icons.picture_as_pdf,
+                size: 22,
+                color: Colors.white,
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           // Brand name
           const Text(
-            'PDFcow',
+            'SitiPDF',
             style: TextStyle(
               color: PdfEditorTheme.text,
               fontSize: 16,

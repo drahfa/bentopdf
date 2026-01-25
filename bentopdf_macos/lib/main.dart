@@ -37,7 +37,7 @@ class PdfCowApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'PDFcow',
+      title: 'SitiPDF',
       theme: AppTheme.darkTheme,
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,

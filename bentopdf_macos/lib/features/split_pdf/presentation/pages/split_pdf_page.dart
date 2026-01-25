@@ -40,17 +40,21 @@ class SplitPdfPage extends ConsumerWidget {
                 if (state.error != null) _buildErrorBanner(ref, state),
                 if (state.successMessage != null) _buildSuccessBanner(ref, state),
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildDropZone(context, ref, state),
-                        if (state.filePath != null) ...[
-                          const SizedBox(height: 16),
-                          _buildPageRangePanel(context, ref, state),
-                        ],
-                      ],
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(40),
+                        child: Column(
+                          children: [
+                            _buildDropZone(context, ref, state),
+                            if (state.filePath != null) ...[
+                              const SizedBox(height: 16),
+                              _buildPageRangePanel(context, ref, state),
+                            ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -123,14 +127,27 @@ class SplitPdfPage extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
-                    'Split PDF',
-                    style: TextStyle(
-                      color: PdfEditorTheme.text,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Split PDF',
+                        style: TextStyle(
+                          color: PdfEditorTheme.text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      Text(
+                        'Extract Page Ranges',
+                        style: TextStyle(
+                          color: PdfEditorTheme.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -208,31 +225,33 @@ class SplitPdfPage extends ConsumerWidget {
   Widget _buildDropZone(BuildContext context, WidgetRef ref, SplitPdfState state) {
     return GlassPanel(
       child: Container(
-        padding: const EdgeInsets.all(40),
+        width: 500,
+        padding: const EdgeInsets.all(60),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: PdfEditorTheme.accent.withOpacity(0.12),
                 border: Border.all(
                   color: PdfEditorTheme.accent.withOpacity(0.25),
                   width: 1,
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(
                 state.filePath != null ? Icons.picture_as_pdf : Icons.upload_file,
-                size: 48,
+                size: 64,
                 color: PdfEditorTheme.accent,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
-              state.filePath != null ? state.filePath!.split('/').last : 'Select a PDF to split',
+              state.filePath != null ? state.filePath!.split('/').last : 'Drag and drop a PDF file here',
               style: const TextStyle(
                 color: PdfEditorTheme.text,
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
@@ -247,6 +266,14 @@ class SplitPdfPage extends ConsumerWidget {
                 ),
               ),
             ],
+            const SizedBox(height: 8),
+            const Text(
+              'or',
+              style: TextStyle(
+                color: PdfEditorTheme.muted,
+                fontSize: 14,
+              ),
+            ),
             const SizedBox(height: 16),
             Material(
               color: Colors.transparent,
@@ -254,18 +281,18 @@ class SplitPdfPage extends ConsumerWidget {
                 onTap: () => ref.read(splitPdfProvider.notifier).selectFile(),
                 borderRadius: BorderRadius.circular(999),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                   decoration: PdfEditorTheme.buttonDecoration(isPrimary: true),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: const [
-                      Icon(Icons.file_open, size: 18, color: PdfEditorTheme.text),
-                      SizedBox(width: 8),
+                      Icon(Icons.file_open, size: 20, color: PdfEditorTheme.text),
+                      SizedBox(width: 10),
                       Text(
-                        'Select File',
+                        'Select Files',
                         style: TextStyle(
                           color: PdfEditorTheme.text,
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

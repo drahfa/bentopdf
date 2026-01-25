@@ -40,14 +40,30 @@ class ImageConversionService {
       if (pageImage != null) {
         final imagePath = '$outputDirectory/page_$i.${format.name}';
 
-        if (format == ImageFormat.jpg) {
-          final image = img.decodeImage(pageImage.bytes);
-          if (image != null) {
-            final jpgBytes = img.encodeJpg(image, quality: quality);
+        // Decode the rendered image
+        final image = img.decodeImage(pageImage.bytes);
+
+        if (image != null) {
+          // Create a white background image
+          final bgImage = img.Image(
+            width: image.width,
+            height: image.height,
+          );
+
+          // Fill with white
+          img.fill(bgImage, color: img.ColorRgb8(255, 255, 255));
+
+          // Composite the original image on top of white background
+          img.compositeImage(bgImage, image);
+
+          // Encode based on format
+          if (format == ImageFormat.jpg) {
+            final jpgBytes = img.encodeJpg(bgImage, quality: quality);
             await File(imagePath).writeAsBytes(jpgBytes);
+          } else {
+            final pngBytes = img.encodePng(bgImage);
+            await File(imagePath).writeAsBytes(pngBytes);
           }
-        } else {
-          await File(imagePath).writeAsBytes(pageImage.bytes);
         }
 
         outputPaths.add(imagePath);

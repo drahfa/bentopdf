@@ -96,14 +96,27 @@ class DeletePagesPage extends ConsumerWidget {
                     child: const Icon(Icons.delete, size: 20, color: PdfEditorTheme.danger),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
-                    'Delete Pages',
-                    style: TextStyle(
-                      color: PdfEditorTheme.text,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Delete Pages',
+                        style: TextStyle(
+                          color: PdfEditorTheme.text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      Text(
+                        'Remove Unwanted Pages',
+                        style: TextStyle(
+                          color: PdfEditorTheme.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -218,8 +231,16 @@ class DeletePagesPage extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
               const Text(
-                'Select a PDF to delete pages',
+                'Drag and drop a PDF file here',
                 style: TextStyle(color: PdfEditorTheme.text, fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'or',
+                style: TextStyle(
+                  color: PdfEditorTheme.muted,
+                  fontSize: 14,
+                ),
               ),
               const SizedBox(height: 16),
               Material(
@@ -235,7 +256,7 @@ class DeletePagesPage extends ConsumerWidget {
                       children: [
                         Icon(Icons.file_open, size: 20, color: PdfEditorTheme.text),
                         SizedBox(width: 10),
-                        Text('Select File', style: TextStyle(color: PdfEditorTheme.text, fontSize: 14, fontWeight: FontWeight.w600)),
+                        Text('Select Files', style: TextStyle(color: PdfEditorTheme.text, fontSize: 14, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),

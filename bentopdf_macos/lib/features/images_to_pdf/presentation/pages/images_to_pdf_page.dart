@@ -115,14 +115,27 @@ class ImagesToPdfPage extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
-                    'Images to PDF',
-                    style: TextStyle(
-                      color: PdfEditorTheme.text,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Images to PDF',
+                        style: TextStyle(
+                          color: PdfEditorTheme.text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      Text(
+                        'Create PDF from Images',
+                        style: TextStyle(
+                          color: PdfEditorTheme.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -261,7 +274,7 @@ class ImagesToPdfPage extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Icon(
-                    Icons.photo_library,
+                    Icons.upload_file,
                     size: 64,
                     color: PdfEditorTheme.accent,
                   ),
@@ -295,10 +308,10 @@ class ImagesToPdfPage extends ConsumerWidget {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.add_photo_alternate, size: 20, color: PdfEditorTheme.text),
+                          Icon(Icons.file_open, size: 20, color: PdfEditorTheme.text),
                           SizedBox(width: 10),
                           Text(
-                            'Select Images',
+                            'Select Files',
                             style: TextStyle(
                               color: PdfEditorTheme.text,
                               fontSize: 14,
@@ -309,15 +322,6 @@ class ImagesToPdfPage extends ConsumerWidget {
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Supported formats: JPG, PNG, GIF, BMP',
-                  style: TextStyle(
-                    color: PdfEditorTheme.muted,
-                    fontSize: 12,
-                  ),
-                  textAlign: TextAlign.center,
                 ),
               ],
             ),

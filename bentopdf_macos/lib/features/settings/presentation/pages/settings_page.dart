@@ -417,16 +417,17 @@ class SettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           const Text(
-            'Ahmad Faisal Mohamad Ayob',
+            'Ahmad Faisal Mohamad Ayob\nSiti Nor Khadijah Addis\nAhmad Aiman Ahmad Faisal\nAhmad Adib Ahmad Faisal',
             style: TextStyle(
               color: PdfEditorTheme.text,
               fontSize: 16,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.2,
+              height: 1.5,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             'VSG Labs',
             style: TextStyle(
@@ -434,16 +435,6 @@ class SettingsPage extends StatelessWidget {
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Universiti Malaysia Terengganu',
-            style: TextStyle(
-              color: PdfEditorTheme.muted,
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-            ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),

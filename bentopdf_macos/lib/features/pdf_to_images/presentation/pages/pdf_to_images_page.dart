@@ -42,22 +42,26 @@ class PdfToImagesPage extends ConsumerWidget {
                 if (state.error != null) _buildErrorBanner(ref, state),
                 if (state.successMessage != null) _buildSuccessBanner(ref, state),
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        PdfFileSelector(
-                          selectedFilePath: state.filePath,
-                          pageCount: state.pageCount,
-                          onSelectFile: () =>
-                              ref.read(pdfToImagesProvider.notifier).selectFile(),
-                          emptyStateTitle: 'Export PDF pages as images',
-                          emptyStateSubtitle: 'Drop a PDF here or click to browse',
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(40),
+                        child: Column(
+                          children: [
+                            PdfFileSelector(
+                              selectedFilePath: state.filePath,
+                              pageCount: state.pageCount,
+                              onSelectFile: () =>
+                                  ref.read(pdfToImagesProvider.notifier).selectFile(),
+                              emptyStateTitle: 'Export PDF pages as images',
+                              emptyStateSubtitle: 'Drop a PDF here or click to browse',
+                            ),
+                            const SizedBox(height: 16),
+                            if (state.filePath != null) _buildOptionsCard(context, ref, state),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        if (state.filePath != null) _buildOptionsCard(context, ref, state),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -130,14 +134,27 @@ class PdfToImagesPage extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
-                    'PDF to Images',
-                    style: TextStyle(
-                      color: PdfEditorTheme.text,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'PDF to Images',
+                        style: TextStyle(
+                          color: PdfEditorTheme.text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      Text(
+                        'Convert to PNG/JPEG',
+                        style: TextStyle(
+                          color: PdfEditorTheme.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -103,14 +103,27 @@ class ExtractPagesPage extends ConsumerWidget {
                     child: const Icon(Icons.filter, size: 20, color: PdfEditorTheme.accent2),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
-                    'Extract Pages',
-                    style: TextStyle(
-                      color: PdfEditorTheme.text,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Extract Pages',
+                        style: TextStyle(
+                          color: PdfEditorTheme.text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      Text(
+                        'Save Specific Pages',
+                        style: TextStyle(
+                          color: PdfEditorTheme.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -225,8 +238,16 @@ class ExtractPagesPage extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
               const Text(
-                'Select a PDF to extract pages',
+                'Drag and drop a PDF file here',
                 style: TextStyle(color: PdfEditorTheme.text, fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'or',
+                style: TextStyle(
+                  color: PdfEditorTheme.muted,
+                  fontSize: 14,
+                ),
               ),
               const SizedBox(height: 16),
               Material(
@@ -242,7 +263,7 @@ class ExtractPagesPage extends ConsumerWidget {
                       children: [
                         Icon(Icons.file_open, size: 20, color: PdfEditorTheme.text),
                         SizedBox(width: 10),
-                        Text('Select File', style: TextStyle(color: PdfEditorTheme.text, fontSize: 14, fontWeight: FontWeight.w600)),
+                        Text('Select Files', style: TextStyle(color: PdfEditorTheme.text, fontSize: 14, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),

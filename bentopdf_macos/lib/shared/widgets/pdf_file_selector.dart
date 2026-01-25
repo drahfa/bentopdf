@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:pdfcow/core/theme/pdf_editor_theme.dart';
+import 'package:pdfcow/shared/widgets/glass_panel.dart';
 
 class PdfFileSelector extends StatefulWidget {
   final String? selectedFilePath;
@@ -43,100 +45,162 @@ class _PdfFileSelectorState extends State<PdfFileSelector> {
           widget.onSelectFile();
         }
       },
-      child: Container(
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: _isDragging
-                ? Theme.of(context).colorScheme.primary
-                : Colors.grey.withValues(alpha: 0.3),
-            width: 2,
-            strokeAlign: BorderSide.strokeAlignInside,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          color: _isDragging
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-              : Colors.transparent,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              _isDragging ? Icons.file_download : Icons.upload_file,
-              size: 48,
-              color: _isDragging
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.grey,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _isDragging
-                  ? 'Drop PDF here'
-                  : widget.emptyStateTitle ?? 'Select or drop PDF file',
-              style: Theme.of(context).textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-            if (!_isDragging) ...[
-              const SizedBox(height: 8),
+      child: GlassPanel(
+        child: Container(
+          width: 500,
+          padding: const EdgeInsets.all(60),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: PdfEditorTheme.accent.withOpacity(0.12),
+                  border: Border.all(
+                    color: PdfEditorTheme.accent.withOpacity(0.25),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  Icons.upload_file,
+                  size: 64,
+                  color: PdfEditorTheme.accent,
+                ),
+              ),
+              const SizedBox(height: 24),
               Text(
-                widget.emptyStateSubtitle ??
-                    'Drag and drop a PDF file here, or click below',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey,
-                    ),
+                'Drag and drop a PDF file here',
+                style: const TextStyle(
+                  color: PdfEditorTheme.text,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 8),
+              const Text(
+                'or',
+                style: TextStyle(
+                  color: PdfEditorTheme.muted,
+                  fontSize: 14,
+                ),
+              ),
               const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: widget.onSelectFile,
-                icon: const Icon(Icons.file_open),
-                label: const Text('Choose PDF File'),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: widget.onSelectFile,
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    decoration: PdfEditorTheme.buttonDecoration(isPrimary: true),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.file_open, size: 20, color: PdfEditorTheme.text),
+                        SizedBox(width: 10),
+                        Text(
+                          'Select Files',
+                          style: TextStyle(
+                            color: PdfEditorTheme.text,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildSelectedFile(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-        ),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.picture_as_pdf, color: Colors.red, size: 32),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.selectedFilePath!.split('/').last,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  overflow: TextOverflow.ellipsis,
+    return GlassPanel(
+      child: Container(
+        width: 500,
+        padding: const EdgeInsets.all(60),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: PdfEditorTheme.accent.withOpacity(0.12),
+                border: Border.all(
+                  color: PdfEditorTheme.accent.withOpacity(0.25),
+                  width: 1,
                 ),
-                if (widget.pageCount != null)
-                  Text(
-                    '${widget.pageCount} pages',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey,
-                        ),
-                  ),
-              ],
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.picture_as_pdf,
+                size: 64,
+                color: PdfEditorTheme.accent,
+              ),
             ),
-          ),
-          TextButton.icon(
-            onPressed: widget.onSelectFile,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Change'),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Text(
+              widget.selectedFilePath!.split('/').last,
+              style: const TextStyle(
+                color: PdfEditorTheme.text,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (widget.pageCount != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                '${widget.pageCount} pages',
+                style: const TextStyle(
+                  color: PdfEditorTheme.muted,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+            const SizedBox(height: 8),
+            const Text(
+              'or',
+              style: TextStyle(
+                color: PdfEditorTheme.muted,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: widget.onSelectFile,
+                borderRadius: BorderRadius.circular(999),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  decoration: PdfEditorTheme.buttonDecoration(isPrimary: true),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.file_open, size: 20, color: PdfEditorTheme.text),
+                      SizedBox(width: 10),
+                      Text(
+                        'Select Files',
+                        style: TextStyle(
+                          color: PdfEditorTheme.text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
