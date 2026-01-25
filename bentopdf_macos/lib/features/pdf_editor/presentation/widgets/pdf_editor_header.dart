@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/pdf_editor_theme.dart';
 import '../../../../shared/widgets/glass_panel.dart';
 import '../providers/pdf_editor_provider.dart';
@@ -22,6 +23,10 @@ class PdfEditorHeader extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
           children: [
+            // Back button
+            _buildBackButton(context),
+            const SizedBox(width: 10),
+
             // Brand
             _buildBrand(),
             const Spacer(),
@@ -29,6 +34,32 @@ class PdfEditorHeader extends ConsumerWidget {
             // Action buttons
             _buildActionButtons(state, notifier, onLoadPdf),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackButton(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.go('/'),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.12),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.10),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            Icons.arrow_back,
+            size: 20,
+            color: PdfEditorTheme.text,
+          ),
         ),
       ),
     );

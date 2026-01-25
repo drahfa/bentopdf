@@ -21,6 +21,13 @@ class ToolInfo {
 class ToolsConfig {
   static const tools = [
     ToolInfo(
+      id: 'pdf_editor',
+      name: 'tools.pdf_editor.name',
+      description: 'tools.pdf_editor.description',
+      icon: Icons.edit,
+      route: '/pdf-editor',
+    ),
+    ToolInfo(
       id: 'merge_pdf',
       name: 'tools.merge_pdf.name',
       description: 'tools.merge_pdf.description',
@@ -89,13 +96,6 @@ class ToolsConfig {
       description: 'tools.decrypt_pdf.description',
       icon: Icons.lock_open,
       route: '/decrypt-pdf',
-    ),
-    ToolInfo(
-      id: 'pdf_editor',
-      name: 'tools.pdf_editor.name',
-      description: 'tools.pdf_editor.description',
-      icon: Icons.edit,
-      route: '/pdf-editor',
     ),
   ];
 }

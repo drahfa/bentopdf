@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pdfcow/features/extract_pages/presentation/providers/extract_pages_provider.dart';
-import 'package:pdfcow/shared/widgets/pdf_file_selector.dart';
+import 'package:pdfcow/core/theme/pdf_editor_theme.dart';
+import 'package:pdfcow/shared/widgets/glass_panel.dart';
 
 class ExtractPagesPage extends ConsumerWidget {
   const ExtractPagesPage({super.key});
@@ -11,183 +13,359 @@ class ExtractPagesPage extends ConsumerWidget {
     final state = ref.watch(extractPagesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Extract Pages'),
-        actions: [
-          if (state.filePath != null && state.selectedPages.isNotEmpty)
-            TextButton(
-              onPressed: () =>
-                  ref.read(extractPagesProvider.notifier).clearSelection(),
-              child: const Text('Clear'),
+      body: Container(
+        decoration: PdfEditorTheme.backgroundDecoration,
+        child: Stack(
+          children: [
+            Positioned(
+              top: -200,
+              right: -100,
+              child: Container(
+                width: 500,
+                height: 500,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      PdfEditorTheme.accent2.withOpacity(0.08),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
             ),
-          if (state.filePath != null)
-            TextButton(
-              onPressed: () =>
-                  ref.read(extractPagesProvider.notifier).selectAll(),
-              child: const Text('Select All'),
+            Column(
+              children: [
+                _buildHeader(context, ref, state),
+                if (state.error != null) _buildErrorBanner(ref, state),
+                if (state.successMessage != null) _buildSuccessBanner(ref, state),
+                if (state.filePath != null && state.pageCount != null) ...[
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      'Select pages to extract',
+                      style: const TextStyle(color: PdfEditorTheme.muted, fontSize: 13),
+                    ),
+                  ),
+                  Expanded(child: _buildPageGrid(context, ref, state)),
+                ] else
+                  Expanded(child: _buildEmptyState(context, ref)),
+                if (state.selectedPages.isNotEmpty) _buildBottomBar(context, ref, state),
+              ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, WidgetRef ref, ExtractPagesState state) {
+    return GlassPanel(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => context.go('/'),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.12),
+                    border: Border.all(color: Colors.white.withOpacity(0.10), width: 1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.arrow_back, size: 20, color: PdfEditorTheme.text),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.12),
+                border: Border.all(color: Colors.white.withOpacity(0.10), width: 1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: PdfEditorTheme.accent2.withOpacity(0.14),
+                      border: Border.all(color: PdfEditorTheme.accent2.withOpacity(0.25), width: 1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.filter, size: 20, color: PdfEditorTheme.accent2),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Extract Pages',
+                    style: TextStyle(
+                      color: PdfEditorTheme.text,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            if (state.filePath != null && state.selectedPages.isNotEmpty)
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => ref.read(extractPagesProvider.notifier).clearSelection(),
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.18),
+                      border: Border.all(color: Colors.white.withOpacity(0.10), width: 1),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Text('Clear', style: TextStyle(color: PdfEditorTheme.text, fontSize: 12, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ),
+            if (state.filePath != null) const SizedBox(width: 8),
+            if (state.filePath != null)
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => ref.read(extractPagesProvider.notifier).selectAll(),
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.18),
+                      border: Border.all(color: Colors.white.withOpacity(0.10), width: 1),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Text('Select All', style: TextStyle(color: PdfEditorTheme.text, fontSize: 12, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorBanner(WidgetRef ref, ExtractPagesState state) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: PdfEditorTheme.danger.withOpacity(0.12),
+        border: Border.all(color: PdfEditorTheme.danger.withOpacity(0.35), width: 1),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: PdfEditorTheme.danger, size: 20),
+          const SizedBox(width: 12),
+          Expanded(child: Text(state.error!, style: const TextStyle(color: PdfEditorTheme.text, fontSize: 13))),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18),
+            color: PdfEditorTheme.muted,
+            onPressed: () => ref.read(extractPagesProvider.notifier).clearError(),
+          ),
         ],
       ),
-      body: Column(
+    );
+  }
+
+  Widget _buildSuccessBanner(WidgetRef ref, ExtractPagesState state) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: PdfEditorTheme.accent2.withOpacity(0.12),
+        border: Border.all(color: PdfEditorTheme.accent2.withOpacity(0.35), width: 1),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
         children: [
-          if (state.error != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red),
+          Icon(Icons.check_circle_outline, color: PdfEditorTheme.accent2, size: 20),
+          const SizedBox(width: 12),
+          Expanded(child: Text(state.successMessage!, style: const TextStyle(color: PdfEditorTheme.text, fontSize: 13))),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18),
+            color: PdfEditorTheme.muted,
+            onPressed: () => ref.read(extractPagesProvider.notifier).clearSuccess(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
+    return Center(
+      child: GlassPanel(
+        child: Container(
+          width: 500,
+          padding: const EdgeInsets.all(60),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: PdfEditorTheme.accent2.withOpacity(0.12),
+                  border: Border.all(color: PdfEditorTheme.accent2.withOpacity(0.25), width: 1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(Icons.upload_file, size: 64, color: PdfEditorTheme.accent2),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.error, color: Colors.red),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(state.error!)),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () =>
-                        ref.read(extractPagesProvider.notifier).clearError(),
+              const SizedBox(height: 24),
+              const Text(
+                'Select a PDF to extract pages',
+                style: TextStyle(color: PdfEditorTheme.text, fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 16),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => ref.read(extractPagesProvider.notifier).selectFile(),
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    decoration: PdfEditorTheme.buttonDecoration(isPrimary: true),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.file_open, size: 20, color: PdfEditorTheme.text),
+                        SizedBox(width: 10),
+                        Text('Select File', style: TextStyle(color: PdfEditorTheme.text, fontSize: 14, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
                   ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPageGrid(BuildContext context, WidgetRef ref, ExtractPagesState state) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 6,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.7,
+      ),
+      itemCount: state.pageCount!,
+      itemBuilder: (context, index) {
+        final pageNumber = index + 1;
+        final isSelected = state.selectedPages.contains(pageNumber);
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => ref.read(extractPagesProvider.notifier).togglePage(pageNumber),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: isSelected
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          PdfEditorTheme.accent2.withOpacity(0.20),
+                          PdfEditorTheme.accent2.withOpacity(0.12),
+                        ],
+                      )
+                    : PdfEditorTheme.glassGradient,
+                border: Border.all(
+                  color: isSelected ? PdfEditorTheme.accent2.withOpacity(0.35) : Colors.white.withOpacity(0.10),
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.picture_as_pdf,
+                    size: 48,
+                    color: isSelected ? PdfEditorTheme.accent2 : PdfEditorTheme.muted,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Page $pageNumber',
+                    style: TextStyle(color: isSelected ? PdfEditorTheme.text : PdfEditorTheme.muted, fontSize: 12, fontWeight: FontWeight.w500),
+                  ),
+                  if (isSelected)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Icon(Icons.check_circle, color: PdfEditorTheme.accent2, size: 20),
+                    ),
                 ],
               ),
-            ),
-          if (state.successMessage != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.green),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(state.successMessage!)),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () =>
-                        ref.read(extractPagesProvider.notifier).clearSuccess(),
-                  ),
-                ],
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: PdfFileSelector(
-              selectedFilePath: state.filePath,
-              pageCount: state.pageCount,
-              onSelectFile: () =>
-                  ref.read(extractPagesProvider.notifier).selectFile(),
-              emptyStateTitle: 'Extract specific pages',
-              emptyStateSubtitle: 'Drop a PDF here or click to browse',
             ),
           ),
-          if (state.filePath != null && state.pageCount != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Select pages to extract',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey,
-                    ),
-              ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBottomBar(BuildContext context, WidgetRef ref, ExtractPagesState state) {
+    return GlassPanel(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Text(
+              '${state.selectedPages.length} page(s) selected',
+              style: const TextStyle(color: PdfEditorTheme.text, fontSize: 13, fontWeight: FontWeight.w500),
             ),
-          const SizedBox(height: 8),
-          if (state.filePath != null && state.pageCount != null)
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 6,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  childAspectRatio: 0.7,
-                ),
-                itemCount: state.pageCount!,
-                itemBuilder: (context, index) {
-                  final pageNumber = index + 1;
-                  final isSelected = state.selectedPages.contains(pageNumber);
-                  return InkWell(
-                    onTap: () => ref
-                        .read(extractPagesProvider.notifier)
-                        .togglePage(pageNumber),
-                    child: Card(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
-                          : null,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.picture_as_pdf,
-                            size: 48,
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Page $pageNumber',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          if (isSelected)
-                            Icon(
-                              Icons.check_circle,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 20,
-                            ),
-                        ],
+            const Spacer(),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: state.isProcessing ? null : () => ref.read(extractPagesProvider.notifier).extractPages(),
+                borderRadius: BorderRadius.circular(999),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  decoration: state.isProcessing
+                      ? BoxDecoration(
+                          color: Colors.black.withOpacity(0.18),
+                          border: Border.all(color: Colors.white.withOpacity(0.10), width: 1),
+                          borderRadius: BorderRadius.circular(999),
+                        )
+                      : PdfEditorTheme.buttonDecoration(isPrimary: true),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (state.isProcessing)
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(PdfEditorTheme.text)),
+                        )
+                      else
+                        const Icon(Icons.filter, size: 18, color: PdfEditorTheme.text),
+                      const SizedBox(width: 8),
+                      Text(
+                        state.isProcessing ? 'Extracting...' : 'Extract Pages',
+                        style: const TextStyle(color: PdfEditorTheme.text, fontSize: 13, fontWeight: FontWeight.w600),
                       ),
-                    ),
-                  );
-                },
+                    ],
+                  ),
+                ),
               ),
             ),
-          if (state.selectedPages.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    '${state.selectedPages.length} page(s) selected',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const Spacer(),
-                  ElevatedButton.icon(
-                    onPressed: state.isProcessing
-                        ? null
-                        : () => ref
-                            .read(extractPagesProvider.notifier)
-                            .extractPages(),
-                    icon: state.isProcessing
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.filter),
-                    label: Text(
-                        state.isProcessing ? 'Extracting...' : 'Extract Pages'),
-                  ),
-                ],
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

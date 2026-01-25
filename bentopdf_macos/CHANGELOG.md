@@ -7,6 +7,104 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-01-25
+
+### Added
+
+#### UI/UX Modernization
+- **Glassmorphism Design System** - Complete UI overhaul with modern glassmorphism aesthetic
+  - Dark gradient backgrounds with radial overlays
+  - Glass panel components with backdrop blur effects
+  - Consistent color scheme across all modules
+  - 18px border radius for rounded corners throughout
+  - Professional glass styling with borders and shadows
+
+- **Modernized Home Page** - Complete redesign of main menu
+  - Glass panel topbar with PDFcow branding and settings button
+  - Hero section with large heading and tagline
+  - Responsive tool card grid (230px min width, 2-6 columns)
+  - Hover effects on tool cards (translateY, border glow, enhanced shadows)
+  - Radial gradient background overlays
+  - PDF Editor moved to first position in tool list
+
+- **Settings Page** - New dedicated settings interface
+  - Appearance section with theme information
+  - Language section showing current locale
+  - About section with version and license info
+  - Attribution section: "Made with ❤️ by Ahmad Faisal Mohamad Ayob, VSG Labs, Universiti Malaysia Terengganu"
+  - Back button navigation to home page
+
+- **Standardized PDF Tool Pages** - All 11 PDF tools updated with glassmorphism
+  - Merge PDF - Glass-styled file list and drop zone
+  - Split PDF - Glass panel with page range inputs
+  - Rotate PDF - Glass cards with rotation angle chips
+  - Extract Pages - Glassmorphism page range selector
+  - Delete Pages - Glass-styled page deletion interface
+  - Organize PDF - Reorderable glass panel items
+  - PDF to Images - Glass format selection cards
+  - Images to PDF - Glass-styled image list
+  - Encrypt PDF - Glass panel password inputs
+  - Decrypt PDF - Glass-styled unlock interface
+  - PDF Editor - Already had glassmorphism (unchanged)
+
+#### Window Management
+- **Maximized by Default** - App now launches maximized (not fullscreen)
+  - Uses screen's visible frame for optimal window size
+  - Maintains window controls (minimize, maximize, close)
+  - Better initial user experience on launch
+
+### Changed
+
+#### Design Consistency
+- **Unified Header Design** - All tool pages now have consistent headers
+  - Back button (← icon) to return to home
+  - Icon container with tool-specific icon and accent color background
+  - Tool name/title display
+  - Action buttons aligned to the right
+
+- **Glass Panel Components** - Standardized across all pages
+  - Error banners with danger color and glass styling
+  - Success banners with accent2 (green) color and glass styling
+  - Drop zones with glass panels and icon containers
+  - File/page list items with glass gradient backgrounds
+  - Bottom action bars with glass panel styling
+
+- **Button Styling** - Consistent button design system
+  - Primary buttons use PdfEditorTheme.buttonDecoration(isPrimary: true)
+  - Secondary buttons with glass styling and borders
+  - Ghost buttons with transparent backgrounds
+  - Disabled state styling for inactive buttons
+
+- **Color Usage** - Systematic application of theme colors
+  - PdfEditorTheme.accent (#7c5cff) - Primary actions and highlights
+  - PdfEditorTheme.accent2 (#22c55e) - Success states and good actions
+  - PdfEditorTheme.danger (#ef4444) - Errors and destructive actions
+  - PdfEditorTheme.warn (#f59e0b) - Warnings
+  - PdfEditorTheme.text (#e8ecff) - Primary text
+  - PdfEditorTheme.muted (#a7b2de) - Secondary text
+
+### Technical Details
+
+#### New Components
+- **Settings Feature** - New feature module added
+  - `/lib/features/settings/presentation/pages/settings_page.dart`
+  - Settings route added to app router (`/settings`)
+  - Integrated with go_router navigation
+
+#### Updated Routes
+- Added `/settings` route for settings page
+- All tool pages now use go_router for back button navigation
+  - `context.go('/')` for consistent navigation behavior
+
+#### Theme System
+- PdfEditorTheme reused across all modules for consistency
+- Glass panel widget utilized throughout the app
+- Standardized spacing, padding, and margin values
+
+---
+
+## [1.0.0] - 2026-01-24
+
 ### Added
 
 #### Core PDF Editor Features

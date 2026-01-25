@@ -12,6 +12,7 @@ import 'package:pdfcow/features/decrypt_pdf/presentation/pages/decrypt_pdf_page.
 import 'package:pdfcow/features/pdf_to_images/presentation/pages/pdf_to_images_page.dart';
 import 'package:pdfcow/features/images_to_pdf/presentation/pages/images_to_pdf_page.dart';
 import 'package:pdfcow/features/pdf_editor/presentation/pages/pdf_editor_page.dart';
+import 'package:pdfcow/features/settings/presentation/pages/settings_page.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -75,6 +76,11 @@ final appRouter = GoRouter(
       path: '/pdf-editor',
       name: 'pdf-editor',
       builder: (context, state) => const PdfEditorPage(),
+    ),
+    GoRoute(
+      path: '/settings',
+      name: 'settings',
+      builder: (context, state) => const SettingsPage(),
     ),
   ],
   errorBuilder: (context, state) => Scaffold(

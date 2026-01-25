@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pdfcow/features/rotate_pdf/presentation/providers/rotate_pdf_provider.dart';
-import 'package:pdfcow/shared/widgets/pdf_file_selector.dart';
+import 'package:pdfcow/core/theme/pdf_editor_theme.dart';
+import 'package:pdfcow/shared/widgets/glass_panel.dart';
 
 class RotatePdfPage extends ConsumerWidget {
   const RotatePdfPage({super.key});
@@ -11,120 +13,372 @@ class RotatePdfPage extends ConsumerWidget {
     final state = ref.watch(rotatePdfProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Rotate PDF'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: Container(
+        decoration: PdfEditorTheme.backgroundDecoration,
+        child: Stack(
           children: [
-            if (state.error != null)
-              Container(
-                padding: const EdgeInsets.all(16),
-                margin: const EdgeInsets.only(bottom: 16),
+            Positioned(
+              top: -200,
+              left: -100,
+              child: Container(
+                width: 500,
+                height: 500,
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.error, color: Colors.red),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(state.error!)),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () =>
-                          ref.read(rotatePdfProvider.notifier).clearError(),
-                    ),
-                  ],
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      PdfEditorTheme.accent.withOpacity(0.08),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
-            if (state.successMessage != null)
-              Container(
-                padding: const EdgeInsets.all(16),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.check_circle, color: Colors.green),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(state.successMessage!)),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () =>
-                          ref.read(rotatePdfProvider.notifier).clearSuccess(),
+            ),
+            Column(
+              children: [
+                _buildHeader(context),
+                if (state.error != null) _buildErrorBanner(ref, state),
+                if (state.successMessage != null) _buildSuccessBanner(ref, state),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildDropZone(context, ref, state),
+                        if (state.filePath != null) ...[
+                          const SizedBox(height: 16),
+                          _buildRotationPanel(context, ref, state),
+                        ],
+                      ],
                     ),
-                  ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return GlassPanel(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => context.go('/'),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.12),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.10),
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    size: 20,
+                    color: PdfEditorTheme.text,
+                  ),
                 ),
               ),
-            PdfFileSelector(
-              selectedFilePath: state.filePath,
-              pageCount: state.pageCount,
-              onSelectFile: () => ref.read(rotatePdfProvider.notifier).selectFile(),
-              emptyStateTitle: 'Rotate your PDF pages',
-              emptyStateSubtitle: 'Drop a PDF here or click to browse',
+            ),
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.12),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.10),
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: PdfEditorTheme.accent.withOpacity(0.14),
+                      border: Border.all(
+                        color: PdfEditorTheme.accent.withOpacity(0.25),
+                        width: 1,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.rotate_90_degrees_cw,
+                      size: 20,
+                      color: PdfEditorTheme.accent,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Rotate PDF',
+                    style: TextStyle(
+                      color: PdfEditorTheme.text,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorBanner(WidgetRef ref, RotatePdfState state) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: PdfEditorTheme.danger.withOpacity(0.12),
+        border: Border.all(
+          color: PdfEditorTheme.danger.withOpacity(0.35),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: PdfEditorTheme.danger, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              state.error!,
+              style: const TextStyle(color: PdfEditorTheme.text, fontSize: 13),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18),
+            color: PdfEditorTheme.muted,
+            onPressed: () => ref.read(rotatePdfProvider.notifier).clearError(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuccessBanner(WidgetRef ref, RotatePdfState state) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: PdfEditorTheme.accent2.withOpacity(0.12),
+        border: Border.all(
+          color: PdfEditorTheme.accent2.withOpacity(0.35),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle_outline, color: PdfEditorTheme.accent2, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              state.successMessage!,
+              style: const TextStyle(color: PdfEditorTheme.text, fontSize: 13),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18),
+            color: PdfEditorTheme.muted,
+            onPressed: () => ref.read(rotatePdfProvider.notifier).clearSuccess(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDropZone(BuildContext context, WidgetRef ref, RotatePdfState state) {
+    return GlassPanel(
+      child: Container(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: PdfEditorTheme.accent.withOpacity(0.12),
+                border: Border.all(
+                  color: PdfEditorTheme.accent.withOpacity(0.25),
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                state.filePath != null ? Icons.picture_as_pdf : Icons.upload_file,
+                size: 48,
+                color: PdfEditorTheme.accent,
+              ),
             ),
             const SizedBox(height: 16),
-            if (state.filePath != null)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+            Text(
+              state.filePath != null ? state.filePath!.split('/').last : 'Select a PDF to rotate',
+              style: const TextStyle(
+                color: PdfEditorTheme.text,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (state.pageCount != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                '${state.pageCount} pages',
+                style: const TextStyle(
+                  color: PdfEditorTheme.muted,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => ref.read(rotatePdfProvider.notifier).selectFile(),
+                borderRadius: BorderRadius.circular(999),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: PdfEditorTheme.buttonDecoration(isPrimary: true),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.file_open, size: 18, color: PdfEditorTheme.text),
+                      SizedBox(width: 8),
                       Text(
-                        'Rotation Angle',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          for (final degrees in [90, 180, 270])
-                            ChoiceChip(
-                              label: Text('$degrees°'),
-                              selected: state.rotationDegrees == degrees,
-                              onSelected: (selected) {
-                                if (selected) {
-                                  ref
-                                      .read(rotatePdfProvider.notifier)
-                                      .setRotation(degrees);
-                                }
-                              },
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: state.isProcessing
-                              ? null
-                              : () => ref
-                                  .read(rotatePdfProvider.notifier)
-                                  .rotatePdf(),
-                          icon: state.isProcessing
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.rotate_90_degrees_cw),
-                          label: Text(state.isProcessing
-                              ? 'Rotating...'
-                              : 'Rotate PDF'),
+                        'Select File',
+                        style: TextStyle(
+                          color: PdfEditorTheme.text,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRotationPanel(BuildContext context, WidgetRef ref, RotatePdfState state) {
+    return GlassPanel(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Rotation Angle',
+              style: TextStyle(
+                color: PdfEditorTheme.text,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              children: [
+                for (final degrees in [90, 180, 270])
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => ref.read(rotatePdfProvider.notifier).setRotation(degrees),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        decoration: state.rotationDegrees == degrees
+                            ? PdfEditorTheme.buttonDecoration(isPrimary: true)
+                            : BoxDecoration(
+                                color: Colors.black.withOpacity(0.18),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.10),
+                                  width: 1,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                        child: Text(
+                          '$degrees°',
+                          style: const TextStyle(
+                            color: PdfEditorTheme.text,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: state.isProcessing ? null : () => ref.read(rotatePdfProvider.notifier).rotatePdf(),
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: state.isProcessing
+                        ? BoxDecoration(
+                            color: Colors.black.withOpacity(0.18),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.10),
+                              width: 1,
+                            ),
+                            borderRadius: BorderRadius.circular(999),
+                          )
+                        : PdfEditorTheme.buttonDecoration(isPrimary: true),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (state.isProcessing)
+                          const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(PdfEditorTheme.text),
+                            ),
+                          )
+                        else
+                          const Icon(Icons.rotate_90_degrees_cw, size: 18, color: PdfEditorTheme.text),
+                        const SizedBox(width: 8),
+                        Text(
+                          state.isProcessing ? 'Rotating...' : 'Rotate PDF',
+                          style: const TextStyle(
+                            color: PdfEditorTheme.text,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
