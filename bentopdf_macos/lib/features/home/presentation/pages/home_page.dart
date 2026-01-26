@@ -120,7 +120,7 @@ class HomePage extends ConsumerWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.asset(
-                'assets/images/app_logo.png',
+                'assets/images/app_icon.png',
                 width: 40,
                 height: 40,
                 fit: BoxFit.cover,

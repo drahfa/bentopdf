@@ -137,10 +137,10 @@ class AnnotationPainter extends CustomPainter {
           ? tempBoundsOverride!
           : annotation.bounds;
 
-      final paint = Paint();
-      if (annotation.opacity < 1.0) {
-        paint.color = Color.fromRGBO(255, 255, 255, annotation.opacity);
-      }
+      final paint = Paint()
+        ..color = Color.fromRGBO(255, 255, 255, annotation.opacity)
+        ..filterQuality = FilterQuality.high;
+
       canvas.drawImageRect(
         image,
         Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),

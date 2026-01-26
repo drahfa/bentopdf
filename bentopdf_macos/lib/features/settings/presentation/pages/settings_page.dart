@@ -54,7 +54,7 @@ class SettingsPage extends ConsumerWidget {
                             // const SizedBox(height: 24),
                             _buildLanguageSection(context, ref),
                             const SizedBox(height: 24),
-                            _buildAboutSection(),
+                            _buildAboutSection(context),
                             const SizedBox(height: 40),
                             _buildAttribution(),
                           ],
@@ -480,7 +480,7 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildAboutSection() {
+  Widget _buildAboutSection(BuildContext context) {
     return GlassPanel(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -520,7 +520,7 @@ class SettingsPage extends ConsumerWidget {
             const SizedBox(height: 16),
             _buildSettingItem(
               'Version',
-              '1.3.0',
+              '1.4.0',
               Icons.tag,
             ),
             const SizedBox(height: 12),
@@ -535,6 +535,29 @@ class SettingsPage extends ConsumerWidget {
               'Commercial License',
               'Proprietary software. All rights reserved. Unauthorized distribution, modification, or commercial use is prohibited.',
               Icons.verified_user,
+            ),
+            const SizedBox(height: 12),
+            _buildClickableSettingItem(
+              context,
+              'Open Source Licenses',
+              'View third-party software credits',
+              Icons.code,
+              () {
+                showLicensePage(
+                  context: context,
+                  applicationName: 'SitiPDF',
+                  applicationVersion: '1.4.0',
+                  applicationIcon: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      width: 64,
+                      height: 64,
+                    ),
+                  ),
+                  applicationLegalese: '© 2026 VSG Labs. All rights reserved.',
+                );
+              },
             ),
           ],
         ),
@@ -644,6 +667,71 @@ class SettingsPage extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildClickableSettingItem(
+    BuildContext context,
+    String title,
+    String subtitle,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.18),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.10),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: PdfEditorTheme.accent,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: PdfEditorTheme.text,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: PdfEditorTheme.muted.withOpacity(0.8),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: PdfEditorTheme.muted.withOpacity(0.5),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

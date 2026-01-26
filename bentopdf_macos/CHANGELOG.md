@@ -7,6 +7,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-01-26
+
+### Added
+
+#### PDF Editor Enhancements
+- **Page Orientation Detection** - Automatic detection of document orientation
+  - Detects portrait, landscape, and square page orientations
+  - Reads PDF rotation metadata (0°, 90°, 180°, 270°) from document structure
+  - Sandbox-safe PDF parsing without external commands
+  - Correctly renders rotated pages with proper aspect ratios
+  - Mixed orientation detection for documents with varying page orientations
+  - Visual indicator in footer showing current page orientation
+  - Rotation angle badge (e.g., "270°") for rotated pages
+  - "Mixed" badge for documents containing multiple orientations
+  - Swaps width/height dimensions for 90° and 270° rotations
+  - Display dimensions account for rotation for accurate rendering
+
+#### Branding & Design
+- **Updated App Icons** - New AppIcons_R3 icon set across all platforms
+  - macOS: All icon sizes (16px to 1024px) updated
+  - Android: All mipmap densities (mdpi, hdpi, xhdpi, xxhdpi, xxxhdpi) updated
+  - Web: Updated 192px, 512px icons and favicon
+  - Top bar icon updated to match new app icon design
+
+- **New Hero Character** - Updated main page branding
+  - SitiPDF character mascot with pink hijab holding PDF document
+  - Transparent background for clean presentation
+  - "SitiPDF Editor" branding integrated into character design
+  - Displayed in center hero section of home page (120x120)
+
+#### Settings & Legal
+- **Open Source Licenses Page** - Legal compliance for dependencies
+  - Clickable "Open Source Licenses" button in About section
+  - Uses Flutter's built-in `showLicensePage()` for automatic license collection
+  - Displays all third-party software credits and licenses
+  - Created comprehensive OPEN_SOURCE_CREDITS.md documentation
+  - Covers 15+ dependencies including pdf, pdfx, flutter_riverpod, go_router
+  - License types: MIT, Apache-2.0, BSD-3-Clause
+
+### Changed
+
+#### Tool Visibility
+- **Temporarily Hidden Tools** - Encrypt and Decrypt PDF tools
+  - Encrypt PDF tool commented out in tool list
+  - Decrypt PDF tool commented out in tool list
+  - Features preserved in codebase for future re-enablement
+  - Simplified main tool selection for current release
+
+### Fixed
+
+#### PDF Rendering
+- **Landscape PDF Display** - Fixed aspect ratio for rotated documents
+  - Correctly handles PDFs with rotation metadata
+  - Fixed 270° rotated pages displaying with wrong aspect ratio
+  - Render dimensions now swap for 90° and 270° rotations
+  - Display width and height account for page rotation
+  - Example: 1191x1684 portrait page with 270° rotation displays as 1684x1191 landscape
+
+### Technical
+
+#### New Services
+- **PdfMetadataService** - PDF metadata extraction
+  - Reads `/Rotate` key directly from PDF structure
+  - No external command dependencies (sandbox-safe)
+  - Returns rotation in degrees (0, 90, 180, 270)
+  - Works with encrypted and password-protected PDFs
+
+#### Enhanced Models
+- **PageOrientationInfo** - Comprehensive orientation tracking
+  - Stores page number, orientation type, dimensions, and rotation
+  - `detectOrientation()` method accounts for rotation metadata
+  - `displayWidth` and `displayHeight` getters for rotated dimensions
+  - Supports portrait, landscape, and square classifications
+
+#### State Management Updates
+- **PdfEditorState** - Added orientation tracking
+  - `pageOrientations` list for all page orientation data
+  - `hasMixedOrientations` boolean flag
+  - Updated `copyWith()` method with new fields
+
 ## [1.3.0] - 2026-01-26
 
 ### Added

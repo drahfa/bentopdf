@@ -16,8 +16,60 @@ import '../../domain/models/text_annotation.dart';
 import '../../../../shared/services/canvas_annotation_service.dart';
 import '../../../../shared/services/pdf_export_service.dart';
 import '../../../../shared/services/pdf_manipulation_service.dart';
+import '../../../../shared/services/pdf_metadata_service.dart';
 import '../../../../shared/services/file_service.dart';
 import '../../../../core/di/service_providers.dart';
+
+enum PageOrientation {
+  portrait,
+  landscape,
+  square,
+}
+
+class PageOrientationInfo {
+  final int pageNumber;
+  final PageOrientation orientation;
+  final double width;
+  final double height;
+  final int rotation; // Rotation in degrees (0, 90, 180, 270)
+
+  const PageOrientationInfo({
+    required this.pageNumber,
+    required this.orientation,
+    required this.width,
+    required this.height,
+    this.rotation = 0,
+  });
+
+  static PageOrientation detectOrientation(double width, double height, int rotation) {
+    // Account for rotation: if rotated 90 or 270 degrees, swap width/height
+    final effectiveWidth = (rotation == 90 || rotation == 270) ? height : width;
+    final effectiveHeight = (rotation == 90 || rotation == 270) ? width : height;
+
+    if ((effectiveWidth - effectiveHeight).abs() < 1.0) {
+      return PageOrientation.square;
+    } else if (effectiveWidth > effectiveHeight) {
+      return PageOrientation.landscape;
+    } else {
+      return PageOrientation.portrait;
+    }
+  }
+
+  String get orientationName {
+    switch (orientation) {
+      case PageOrientation.portrait:
+        return 'Portrait';
+      case PageOrientation.landscape:
+        return 'Landscape';
+      case PageOrientation.square:
+        return 'Square';
+    }
+  }
+
+  // Get actual display dimensions after applying rotation
+  double get displayWidth => (rotation == 90 || rotation == 270) ? height : width;
+  double get displayHeight => (rotation == 90 || rotation == 270) ? width : height;
+}
 
 class PdfEditorState {
   final String? filePath;
@@ -41,6 +93,8 @@ class PdfEditorState {
   final double exportProgress;
   final Map<String, ui.Image> imageCache;
   final AnnotationBase? copiedAnnotation;
+  final List<PageOrientationInfo> pageOrientations;
+  final bool hasMixedOrientations;
 
   const PdfEditorState({
     this.filePath,
@@ -64,6 +118,8 @@ class PdfEditorState {
     this.exportProgress = 0.0,
     this.imageCache = const {},
     this.copiedAnnotation,
+    this.pageOrientations = const [],
+    this.hasMixedOrientations = false,
   });
 
   PdfEditorState copyWith({
@@ -88,6 +144,8 @@ class PdfEditorState {
     double? exportProgress,
     Map<String, ui.Image>? imageCache,
     AnnotationBase? copiedAnnotation,
+    List<PageOrientationInfo>? pageOrientations,
+    bool? hasMixedOrientations,
   }) {
     return PdfEditorState(
       filePath: filePath ?? this.filePath,
@@ -112,6 +170,8 @@ class PdfEditorState {
       exportProgress: exportProgress ?? this.exportProgress,
       imageCache: imageCache ?? this.imageCache,
       copiedAnnotation: copiedAnnotation ?? this.copiedAnnotation,
+      pageOrientations: pageOrientations ?? this.pageOrientations,
+      hasMixedOrientations: hasMixedOrientations ?? this.hasMixedOrientations,
     );
   }
 }
@@ -120,6 +180,7 @@ class PdfEditorNotifier extends StateNotifier<PdfEditorState> {
   final CanvasAnnotationService _annotationService;
   final PdfExportService _exportService;
   final PdfManipulationService _manipulationService;
+  final PdfMetadataService _metadataService;
   final FileService _fileService;
   final Random _random = Random();
 
@@ -127,10 +188,12 @@ class PdfEditorNotifier extends StateNotifier<PdfEditorState> {
     required CanvasAnnotationService annotationService,
     required PdfExportService exportService,
     required PdfManipulationService manipulationService,
+    required PdfMetadataService metadataService,
     required FileService fileService,
   })  : _annotationService = annotationService,
         _exportService = exportService,
         _manipulationService = manipulationService,
+        _metadataService = metadataService,
         _fileService = fileService,
         super(const PdfEditorState());
 
@@ -142,11 +205,43 @@ class PdfEditorNotifier extends StateNotifier<PdfEditorState> {
       final bytes = await file.readAsBytes();
       final document = await pdfx.PdfDocument.openData(bytes);
 
+      // Get rotation information for pages
+      final rotation = await _metadataService.getPageRotation(filePath, 1);
+
+      // Detect orientations for all pages
+      final List<PageOrientationInfo> orientations = [];
+      for (int i = 1; i <= document.pagesCount; i++) {
+        final page = await document.getPage(i);
+
+        final orientation = PageOrientationInfo.detectOrientation(
+          page.width,
+          page.height,
+          rotation,
+        );
+
+        orientations.add(PageOrientationInfo(
+          pageNumber: i,
+          orientation: orientation,
+          width: page.width,
+          height: page.height,
+          rotation: rotation,
+        ));
+        await page.close();
+      }
+
+      // Determine if mixed orientations exist
+      final uniqueOrientations = orientations
+          .map((o) => o.orientation)
+          .toSet();
+      final hasMixed = uniqueOrientations.length > 1;
+
       state = state.copyWith(
         filePath: filePath,
         document: document,
         totalPages: document.pagesCount,
         currentPageNumber: 1,
+        pageOrientations: orientations,
+        hasMixedOrientations: hasMixed,
       );
 
       await _loadPage(1);
@@ -166,12 +261,26 @@ class PdfEditorNotifier extends StateNotifier<PdfEditorState> {
       if (document == null) return;
 
       final page = await document.getPage(pageNumber);
+
+      // Get rotation for this page
+      final pageOrientation = state.pageOrientations
+          .where((o) => o.pageNumber == pageNumber)
+          .firstOrNull;
+      final rotation = pageOrientation?.rotation ?? 0;
+
+      // Calculate display dimensions accounting for rotation
+      final displayWidth = pageOrientation?.displayWidth ?? page.width;
+      final displayHeight = pageOrientation?.displayHeight ?? page.height;
+
+      // Render with swapped dimensions if rotated 90 or 270 degrees
+      final renderWidth = (rotation == 90 || rotation == 270) ? page.height * 2 : page.width * 2;
+      final renderHeight = (rotation == 90 || rotation == 270) ? page.width * 2 : page.height * 2;
+
       final pageImage = await page.render(
-        width: page.width * 2,
-        height: page.height * 2,
+        width: renderWidth,
+        height: renderHeight,
         format: pdfx.PdfPageImageFormat.png,
       );
-      await page.close();
 
       final annotations =
           _annotationService.getAnnotationsForPage(pageNumber);
@@ -181,9 +290,11 @@ class PdfEditorNotifier extends StateNotifier<PdfEditorState> {
         currentPageImage: pageImage,
         currentPageAnnotations: annotations,
         selectedAnnotationId: null,
-        currentPageWidth: page.width,
-        currentPageHeight: page.height,
+        currentPageWidth: displayWidth,
+        currentPageHeight: displayHeight,
       );
+
+      await page.close();
 
       await _loadImagesForAnnotations(annotations);
     } catch (e) {
@@ -318,7 +429,7 @@ class PdfEditorNotifier extends StateNotifier<PdfEditorState> {
       createdAt: DateTime.now(),
       imageData: imageData,
       bounds: bounds,
-      opacity: state.opacity,
+      opacity: 1.0, // Always fully opaque for stamps
     );
 
     _annotationService.addAnnotation(state.currentPageNumber, annotation);
@@ -530,7 +641,7 @@ class PdfEditorNotifier extends StateNotifier<PdfEditorState> {
       createdAt: DateTime.now(),
       imageData: imageData,
       bounds: bounds,
-      opacity: state.opacity,
+      opacity: 1.0, // Always fully opaque for stamps
     );
 
     _annotationService.addAnnotation(state.currentPageNumber, annotation);
@@ -771,7 +882,7 @@ class PdfEditorNotifier extends StateNotifier<PdfEditorState> {
           copiedAnnotation.bounds.width,
           copiedAnnotation.bounds.height,
         ),
-        opacity: copiedAnnotation.opacity,
+        opacity: 1.0, // Always fully opaque for stamps
       );
       await _loadImageForAnnotation(id, copiedAnnotation.imageData);
     } else if (copiedAnnotation is ShapeAnnotation) {
@@ -1077,6 +1188,7 @@ final pdfEditorProvider =
     annotationService: CanvasAnnotationService(),
     exportService: PdfExportService(),
     manipulationService: PdfManipulationService(),
+    metadataService: PdfMetadataService(),
     fileService: ref.watch(fileServiceProvider),
   );
 });

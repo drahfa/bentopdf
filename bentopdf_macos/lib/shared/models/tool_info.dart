@@ -83,7 +83,8 @@ class ToolsConfig {
       icon: Icons.photo_library,
       route: '/images-to-pdf',
     ),
-    ToolInfo(
+    // Temporarily hidden - Encrypt/Decrypt PDF
+    /* ToolInfo(
       id: 'encrypt_pdf',
       name: 'tools.encrypt_pdf.name',
       description: 'tools.encrypt_pdf.description',
@@ -96,6 +97,6 @@ class ToolsConfig {
       description: 'tools.decrypt_pdf.description',
       icon: Icons.lock_open,
       route: '/decrypt-pdf',
-    ),
+    ), */
   ];
 }
