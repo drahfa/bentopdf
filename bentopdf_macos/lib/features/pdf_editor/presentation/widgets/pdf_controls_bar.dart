@@ -51,7 +51,7 @@ class PdfControlsBar extends ConsumerWidget {
                 label: '',
                 icon: Icons.remove,
                 onPressed: () {
-                  final newZoom = (state.zoomLevel - 0.1).clamp(0.5, 3.0);
+                  final newZoom = (state.zoomLevel - 0.1).clamp(0.4, 3.0);
                   notifier.changeZoom(newZoom);
                 },
                 isSmall: true,
@@ -61,7 +61,7 @@ class PdfControlsBar extends ConsumerWidget {
                 label: '',
                 icon: Icons.add,
                 onPressed: () {
-                  final newZoom = (state.zoomLevel + 0.1).clamp(0.5, 3.0);
+                  final newZoom = (state.zoomLevel + 0.1).clamp(0.4, 3.0);
                   notifier.changeZoom(newZoom);
                 },
                 isSmall: true,

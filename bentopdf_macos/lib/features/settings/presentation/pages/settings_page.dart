@@ -520,7 +520,7 @@ class SettingsPage extends ConsumerWidget {
             const SizedBox(height: 16),
             _buildSettingItem(
               'Version',
-              '1.4.0',
+              '1.4.1',
               Icons.tag,
             ),
             const SizedBox(height: 12),
@@ -546,7 +546,7 @@ class SettingsPage extends ConsumerWidget {
                 showLicensePage(
                   context: context,
                   applicationName: 'SitiPDF',
-                  applicationVersion: '1.4.0',
+                  applicationVersion: '1.4.1',
                   applicationIcon: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Image.asset(

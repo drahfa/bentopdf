@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:pdfcow/features/extract_pages/presentation/providers/extract_pages_provider.dart';
 import 'package:pdfcow/core/theme/pdf_editor_theme.dart';
 import 'package:pdfcow/shared/widgets/glass_panel.dart';
@@ -312,31 +313,110 @@ class ExtractPagesPage extends ConsumerWidget {
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.picture_as_pdf,
-                    size: 48,
-                    color: isSelected ? PdfEditorTheme.accent2 : PdfEditorTheme.muted,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Page $pageNumber',
-                    style: TextStyle(color: isSelected ? PdfEditorTheme.text : PdfEditorTheme.muted, fontSize: 12, fontWeight: FontWeight.w500),
-                  ),
-                  if (isSelected)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Icon(Icons.check_circle, color: PdfEditorTheme.accent2, size: 20),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Stack(
+                  children: [
+                    // Page thumbnail
+                    if (state.document != null)
+                      FutureBuilder<pdfx.PdfPageImage?>(
+                        future: _renderPageThumbnail(state.document!, pageNumber),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData && snapshot.data != null) {
+                            return Positioned.fill(
+                              child: Container(
+                                color: Colors.white,
+                                child: Image.memory(
+                                  snapshot.data!.bytes,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            );
+                          }
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(PdfEditorTheme.muted),
+                            ),
+                          );
+                        },
+                      ),
+                    // Page number overlay
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withOpacity(0),
+                              Colors.black.withOpacity(0.8),
+                            ],
+                          ),
+                        ),
+                        child: Text(
+                          'Page $pageNumber',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: PdfEditorTheme.text,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
                     ),
-                ],
+                    // Selection indicator
+                    if (isSelected)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: PdfEditorTheme.accent2,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: PdfEditorTheme.accent2.withOpacity(0.5),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
         );
       },
     );
+  }
+
+  Future<pdfx.PdfPageImage?> _renderPageThumbnail(pdfx.PdfDocument document, int pageNumber) async {
+    try {
+      final page = await document.getPage(pageNumber);
+      final pageImage = await page.render(
+        width: page.width * 0.4,
+        height: page.height * 0.4,
+        format: pdfx.PdfPageImageFormat.png,
+      );
+      await page.close();
+      return pageImage;
+    } catch (e) {
+      return null;
+    }
   }
 
   Widget _buildBottomBar(BuildContext context, WidgetRef ref, ExtractPagesState state) {

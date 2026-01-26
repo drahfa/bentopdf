@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:pdfcow/core/di/service_providers.dart';
 import 'package:pdfcow/shared/services/pdf_manipulation_service.dart';
 import 'package:pdfcow/shared/services/file_service.dart';
 
 class ExtractPagesState {
   final String? filePath;
+  final pdfx.PdfDocument? document;
   final int? pageCount;
   final Set<int> selectedPages;
   final bool isProcessing;
@@ -13,6 +16,7 @@ class ExtractPagesState {
 
   const ExtractPagesState({
     this.filePath,
+    this.document,
     this.pageCount,
     this.selectedPages = const {},
     this.isProcessing = false,
@@ -22,6 +26,7 @@ class ExtractPagesState {
 
   ExtractPagesState copyWith({
     String? filePath,
+    pdfx.PdfDocument? document,
     int? pageCount,
     Set<int>? selectedPages,
     bool? isProcessing,
@@ -30,6 +35,7 @@ class ExtractPagesState {
   }) {
     return ExtractPagesState(
       filePath: filePath ?? this.filePath,
+      document: document ?? this.document,
       pageCount: pageCount ?? this.pageCount,
       selectedPages: selectedPages ?? this.selectedPages,
       isProcessing: isProcessing ?? this.isProcessing,
@@ -51,9 +57,15 @@ class ExtractPagesNotifier extends StateNotifier<ExtractPagesState> {
     if (filePath == null) return;
 
     try {
-      final pageCount = await _pdfService.getPageCount(filePath);
+      // Load PDF document
+      final file = File(filePath);
+      final bytes = await file.readAsBytes();
+      final document = await pdfx.PdfDocument.openData(bytes);
+
+      final pageCount = document.pagesCount;
       state = state.copyWith(
         filePath: filePath,
+        document: document,
         pageCount: pageCount,
         selectedPages: {},
         error: null,

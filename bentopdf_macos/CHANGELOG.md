@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-01-26
+
+### Added
+
+#### Extract Pages Enhancements
+- **Page Thumbnails** - Visual preview of pages in Extract Pages tool
+  - Replaced PDF icon placeholders with actual page thumbnails
+  - Asynchronous rendering using FutureBuilder for smooth performance
+  - Rendered at 0.4× scale for optimal memory usage
+  - White background with page number overlay
+  - Gradient overlay at bottom with page number text
+  - Selection indicator with checkmark badge (top-right corner)
+  - Loading spinner shown while thumbnails render
+  - Maintains 6-column grid layout
+  - Visual feedback for selected pages with gradient background
+
+### Technical
+
+#### State Management Updates
+- **ExtractPagesState** - Added PDF document for thumbnail rendering
+  - New `pdfx.PdfDocument? document` field to store loaded PDF
+  - Updated `selectFile()` to load document using pdfx.PdfDocument.openData()
+  - Document stored in state for thumbnail generation
+
+#### UI Components
+- **_renderPageThumbnail()** - Helper method for page preview rendering
+  - Async thumbnail generation at 0.4× scale
+  - Proper resource cleanup (page.close() after rendering)
+  - Error handling returns null for failed renders
+  - Returns PdfPageImage for display in UI
+
 ## [1.4.0] - 2026-01-26
 
 ### Added
