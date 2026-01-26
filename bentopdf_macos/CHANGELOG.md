@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-01-26
+
+### Added
+
+#### Multi-Platform Support
+- **Web Platform Support** - Added Flutter web platform
+  - Progressive Web App (PWA) capabilities
+  - pdf.js integration for PDF rendering on web
+  - Responsive design for browser environments
+  - Updated app branding to SitiPDF across all web assets
+
+- **Android Platform Support** - Full Android compatibility
+  - Android SDK 36 support
+  - Native Android APK builds
+  - Tested on Pixel 7 Pro emulator
+  - File picker integration for Android
+
+#### Settings Updates
+- **Publisher Information** - Added "Published by VSG Labs" field
+  - Displayed in About section with business icon
+  - Professional branding presentation
+
+### Changed
+- **App Identity** - Updated branding from pdfcow to SitiPDF
+  - Web manifest updated with SitiPDF name
+  - Web page title updated across platform
+  - Improved app description for web platform
+
+### Fixed
+- **PDF Editor Background** - Removed missing background image reference
+  - Eliminated 404 errors on web platform
+  - Cleaner gradient-only background
+  - Better performance across platforms
+
+### Technical
+- Platform support: macOS (primary), Web (new), Android (new)
+- Web bundle size optimization
+- Cross-platform file handling compatibility
+- Responsive UI for multiple screen sizes
+
 ## [1.2.0] - 2026-01-26
 
 ### Added

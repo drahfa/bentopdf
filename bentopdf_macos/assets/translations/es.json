@@ -152,6 +152,10 @@
       "creating": "Creando...",
       "success": "¡PDF creado exitosamente!",
       "error_no_images": "Por favor añade al menos una imagen"
+    },
+    "pdf_editor": {
+      "name": "Editor PDF",
+      "description": "Anotar y editar PDFs"
     }
   }
 }

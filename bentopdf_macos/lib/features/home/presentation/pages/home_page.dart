@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pdfcow/shared/models/tool_info.dart';
 import 'package:pdfcow/features/home/presentation/widgets/tool_card.dart';
 import 'package:pdfcow/core/theme/pdf_editor_theme.dart';
+import 'package:pdfcow/features/settings/presentation/providers/settings_provider.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final isDark = settings.themeMode == AppThemeMode.dark;
+    final accent = isDark ? PdfEditorTheme.accent : PdfEditorThemeLight.accent;
+    final accent2 = isDark ? PdfEditorTheme.accent2 : PdfEditorThemeLight.accent2;
+    final text = isDark ? PdfEditorTheme.text : PdfEditorThemeLight.text;
+
     return Scaffold(
       body: Container(
-        decoration: PdfEditorTheme.backgroundDecoration,
+        decoration: isDark ? PdfEditorTheme.backgroundDecoration : PdfEditorThemeLight.backgroundDecoration,
         child: Stack(
           children: [
             // Radial gradient overlays
@@ -26,7 +34,7 @@ class HomePage extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      PdfEditorTheme.accent.withOpacity(0.08),
+                      accent.withOpacity(0.08),
                       Colors.transparent,
                     ],
                   ),
@@ -43,7 +51,7 @@ class HomePage extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      PdfEditorTheme.accent2.withOpacity(0.06),
+                      accent2.withOpacity(0.06),
                       Colors.transparent,
                     ],
                   ),
@@ -53,13 +61,13 @@ class HomePage extends StatelessWidget {
             // Main content
             Column(
               children: [
-                _buildTopBar(context),
+                _buildTopBar(context, isDark, text, accent),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(40),
                     child: Column(
                       children: [
-                        _buildHeroSection(context),
+                        _buildHeroSection(context, isDark, text),
                         const SizedBox(height: 48),
                         _buildToolsGrid(),
                       ],
@@ -74,20 +82,20 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
+  Widget _buildTopBar(BuildContext context, bool isDark, Color text, Color accent) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        gradient: PdfEditorTheme.glassGradient,
+        gradient: isDark ? PdfEditorTheme.glassGradient : PdfEditorThemeLight.glassGradient,
         border: Border.all(
-          color: Colors.white.withOpacity(0.10),
+          color: isDark ? Colors.white.withOpacity(0.10) : Colors.black.withOpacity(0.10),
           width: 1,
         ),
-        borderRadius: BorderRadius.circular(PdfEditorTheme.radius),
+        borderRadius: BorderRadius.circular(isDark ? PdfEditorTheme.radius : PdfEditorThemeLight.radius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: isDark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.08),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
@@ -100,41 +108,31 @@ class HomePage extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xF27C5CFF),
-                  Color(0xD922C55E),
-                ],
-              ),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.18),
-                width: 1,
-              ),
               boxShadow: [
                 BoxShadow(
-                  color: PdfEditorTheme.accent.withOpacity(0.20),
+                  color: accent.withOpacity(0.20),
                   blurRadius: 30,
                   offset: const Offset(0, 10),
                 ),
               ],
             ),
-            child: const Center(
-              child: Icon(
-                Icons.picture_as_pdf,
-                size: 22,
-                color: Colors.white,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                'assets/images/app_logo.png',
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
               ),
             ),
           ),
           const SizedBox(width: 12),
           // Brand name
-          const Text(
+          Text(
             'SitiPDF',
             style: TextStyle(
-              color: PdfEditorTheme.text,
+              color: text,
               fontSize: 16,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,
@@ -153,17 +151,17 @@ class HomePage extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.12),
+                  color: isDark ? Colors.black.withOpacity(0.12) : Colors.white.withOpacity(0.5),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.10),
+                    color: isDark ? Colors.white.withOpacity(0.10) : Colors.black.withOpacity(0.10),
                     width: 1,
                   ),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.settings,
                   size: 20,
-                  color: PdfEditorTheme.text,
+                  color: text,
                 ),
               ),
             ),
@@ -303,13 +301,40 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeroSection(BuildContext context) {
+  Widget _buildHeroSection(BuildContext context, bool isDark, Color text) {
+    final muted = isDark ? PdfEditorTheme.muted : PdfEditorThemeLight.muted;
+    final accent = isDark ? PdfEditorTheme.accent : PdfEditorThemeLight.accent;
     return Column(
       children: [
+        // App Logo
+        Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withOpacity(0.25),
+                blurRadius: 40,
+                offset: const Offset(0, 15),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: Image.asset(
+              'assets/images/app_logo.png',
+              width: 120,
+              height: 120,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        const SizedBox(height: 32),
         Text(
           'app.tagline'.tr(),
-          style: const TextStyle(
-            color: PdfEditorTheme.text,
+          style: TextStyle(
+            color: text,
             fontSize: 42,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.5,
@@ -321,7 +346,7 @@ class HomePage extends StatelessWidget {
         Text(
           'app.subtitle'.tr(),
           style: TextStyle(
-            color: PdfEditorTheme.muted,
+            color: muted,
             fontSize: 16,
             fontWeight: FontWeight.w400,
             height: 1.6,

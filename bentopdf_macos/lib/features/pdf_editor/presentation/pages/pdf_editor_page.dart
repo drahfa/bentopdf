@@ -48,22 +48,14 @@ class _PdfEditorPageState extends ConsumerState<PdfEditorPage> {
   }
 
   BoxDecoration _buildBackgroundDecoration() {
-    return BoxDecoration(
-      gradient: const LinearGradient(
+    return const BoxDecoration(
+      gradient: LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
           Color(0xFF070A14),
           PdfEditorTheme.bg,
         ],
-      ),
-      image: DecorationImage(
-        image: const AssetImage('assets/images/bg_gradient.png'),
-        fit: BoxFit.cover,
-        opacity: 0.3,
-        onError: (exception, stackTrace) {
-          // Fallback if image doesn't exist
-        },
       ),
     );
   }

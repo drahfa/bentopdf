@@ -152,6 +152,10 @@
       "creating": "Erstellen...",
       "success": "PDF erfolgreich erstellt!",
       "error_no_images": "Bitte mindestens ein Bild hinzufügen"
+    },
+    "pdf_editor": {
+      "name": "PDF Editor",
+      "description": "PDFs kommentieren und bearbeiten"
     }
   }
 }

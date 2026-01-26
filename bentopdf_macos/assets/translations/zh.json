@@ -152,6 +152,10 @@
       "creating": "创建中...",
       "success": "PDF创建成功！",
       "error_no_images": "请至少添加一张图像"
+    },
+    "pdf_editor": {
+      "name": "PDF编辑器",
+      "description": "注释和编辑PDF"
     }
   }
 }

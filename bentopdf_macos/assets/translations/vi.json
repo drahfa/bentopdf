@@ -152,6 +152,10 @@
       "creating": "Đang tạo...",
       "success": "Tạo PDF thành công!",
       "error_no_images": "Vui lòng thêm ít nhất một hình ảnh"
+    },
+    "pdf_editor": {
+      "name": "Trình chỉnh sửa PDF",
+      "description": "Chú thích và chỉnh sửa PDF"
     }
   }
 }

@@ -50,8 +50,8 @@ class SettingsPage extends ConsumerWidget {
                           children: [
                             _buildSectionTitle('Settings'),
                             const SizedBox(height: 24),
-                            _buildAppearanceSection(ref, settings),
-                            const SizedBox(height: 24),
+                            // _buildAppearanceSection(ref, settings),
+                            // const SizedBox(height: 24),
                             _buildLanguageSection(context, ref),
                             const SizedBox(height: 24),
                             _buildAboutSection(),
@@ -520,8 +520,14 @@ class SettingsPage extends ConsumerWidget {
             const SizedBox(height: 16),
             _buildSettingItem(
               'Version',
-              '1.2.0',
+              '1.3.0',
               Icons.tag,
+            ),
+            const SizedBox(height: 12),
+            _buildSettingItem(
+              'Published by',
+              'VSG Labs',
+              Icons.business,
             ),
             const SizedBox(height: 12),
             _buildSettingItemWithSubtitle(

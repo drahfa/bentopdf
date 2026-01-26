@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:pdfcow/core/router/app_router.dart';
 import 'package:pdfcow/core/theme/app_theme.dart';
+import 'package:pdfcow/features/settings/presentation/providers/settings_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,14 +32,17 @@ Future<void> main() async {
   );
 }
 
-class PdfCowApp extends StatelessWidget {
+class PdfCowApp extends ConsumerWidget {
   const PdfCowApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final isDark = settings.themeMode == AppThemeMode.dark;
+
     return MaterialApp.router(
       title: 'SitiPDF',
-      theme: AppTheme.darkTheme,
+      theme: isDark ? AppTheme.darkTheme : AppTheme.lightTheme,
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: context.localizationDelegates,

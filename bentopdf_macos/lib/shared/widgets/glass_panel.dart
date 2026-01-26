@@ -1,8 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/pdf_editor_theme.dart';
+import '../../features/settings/presentation/providers/settings_provider.dart';
 
-class GlassPanel extends StatelessWidget {
+class GlassPanel extends ConsumerWidget {
   final Widget child;
   final double? borderRadius;
   final EdgeInsetsGeometry? padding;
@@ -15,14 +17,23 @@ class GlassPanel extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final isDark = settings.themeMode == AppThemeMode.dark;
+
+    final decoration = isDark
+        ? PdfEditorTheme.glassPanelDecoration
+        : PdfEditorThemeLight.glassPanelDecoration;
+    final radius = borderRadius ?? (isDark ? PdfEditorTheme.radius : PdfEditorThemeLight.radius);
+    final blur = isDark ? PdfEditorTheme.blur : PdfEditorThemeLight.blur;
+
     return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius ?? PdfEditorTheme.radius),
+      borderRadius: BorderRadius.circular(radius),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: PdfEditorTheme.blur, sigmaY: PdfEditorTheme.blur),
+        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
         child: Container(
-          decoration: PdfEditorTheme.glassPanelDecoration.copyWith(
-            borderRadius: BorderRadius.circular(borderRadius ?? PdfEditorTheme.radius),
+          decoration: decoration.copyWith(
+            borderRadius: BorderRadius.circular(radius),
           ),
           padding: padding,
           child: child,

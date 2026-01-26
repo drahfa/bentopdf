@@ -152,6 +152,10 @@
       "creating": "Oluşturuluyor...",
       "success": "PDF başarıyla oluşturuldu!",
       "error_no_images": "Lütfen en az bir görüntü ekleyin"
+    },
+    "pdf_editor": {
+      "name": "PDF Düzenleyici",
+      "description": "PDF'lere not ekleyin ve düzenleyin"
     }
   }
 }

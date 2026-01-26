@@ -1,5 +1,212 @@
 import 'package:flutter/material.dart';
 
+class PdfEditorThemeLight {
+  // Self reference for convenience
+  static Type get self => PdfEditorThemeLight;
+
+  // Background colors
+  static const Color bg = Color(0xFFF9FAFB);
+  static const Color panel = Color(0xFFFFFFFF);
+  static const Color panel2 = Color(0xFFF3F4F6);
+  static const Color card = Color(0xCCFFFFFF);
+
+  // Border/Stroke colors
+  static const Color stroke = Color(0xFFE5E7EB);
+  static const Color stroke2 = Color(0xFFD1D5DB);
+
+  // Text colors
+  static const Color text = Color(0xFF111827);
+  static const Color muted = Color(0xFF6B7280);
+  static const Color muted2 = Color(0xFF9CA3AF);
+
+  // Accent colors (same as dark)
+  static const Color accent = Color(0xFF7C5CFF);
+  static const Color accent2 = Color(0xFF22C55E);
+  static const Color warn = Color(0xFFF59E0B);
+  static const Color danger = Color(0xFFEF4444);
+
+  // Dimensions (same as dark)
+  static const double radius = 18.0;
+  static const double radius2 = 14.0;
+  static const double blur = 18.0;
+
+  // Gradients
+  static const LinearGradient primaryGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xF27C5CFF),
+      Color(0x8C7C5CFF),
+    ],
+  );
+
+  static const LinearGradient goodGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xEB22C55E),
+      Color(0x8C22C55E),
+    ],
+  );
+
+  static const LinearGradient glassGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      Color(0x0F000000),
+      Color(0x08000000),
+    ],
+  );
+
+  // Shadows
+  static List<BoxShadow> get cardShadow => [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.08),
+      blurRadius: 20,
+      offset: const Offset(0, 4),
+    ),
+  ];
+
+  static List<BoxShadow> get accentShadow => [
+    BoxShadow(
+      color: accent.withOpacity(0.12),
+      blurRadius: 20,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
+  static List<BoxShadow> get goodShadow => [
+    BoxShadow(
+      color: accent2.withOpacity(0.10),
+      blurRadius: 20,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
+  // Background decoration
+  static BoxDecoration get backgroundDecoration => const BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Color(0xFFF3F4F6),
+        Color(0xFFF9FAFB),
+      ],
+    ),
+  );
+
+  // Glass panel decoration
+  static BoxDecoration get glassPanelDecoration => BoxDecoration(
+    color: Colors.white.withOpacity(0.9),
+    border: Border.all(
+      color: Colors.black.withOpacity(0.08),
+      width: 1,
+    ),
+    borderRadius: BorderRadius.circular(radius),
+    boxShadow: cardShadow,
+  );
+
+  // Button styles
+  static BoxDecoration buttonDecoration({
+    bool isActive = false,
+    bool isPrimary = false,
+    bool isGood = false,
+  }) {
+    if (isPrimary) {
+      return BoxDecoration(
+        gradient: primaryGradient,
+        border: Border.all(
+          color: accent.withOpacity(0.45),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: accentShadow,
+      );
+    }
+
+    if (isGood) {
+      return BoxDecoration(
+        gradient: goodGradient,
+        border: Border.all(
+          color: accent2.withOpacity(0.45),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: goodShadow,
+      );
+    }
+
+    if (isActive) {
+      return BoxDecoration(
+        color: accent.withOpacity(0.12),
+        border: Border.all(
+          color: accent.withOpacity(0.35),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(radius2),
+      );
+    }
+
+    return BoxDecoration(
+      color: Colors.white,
+      border: Border.all(
+        color: Colors.black.withOpacity(0.10),
+        width: 1,
+      ),
+      borderRadius: BorderRadius.circular(radius2),
+    );
+  }
+
+  // Tool button decoration
+  static BoxDecoration toolDecoration({bool isActive = false}) {
+    if (isActive) {
+      return BoxDecoration(
+        color: accent.withOpacity(0.12),
+        border: Border.all(
+          color: accent.withOpacity(0.35),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      );
+    }
+
+    return BoxDecoration(
+      color: Colors.white,
+      border: Border.all(
+        color: Colors.black.withOpacity(0.10),
+        width: 1,
+      ),
+      borderRadius: BorderRadius.circular(12),
+    );
+  }
+
+  // Text styles
+  static const TextStyle headingStyle = TextStyle(
+    color: text,
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.2,
+  );
+
+  static const TextStyle bodyStyle = TextStyle(
+    color: text,
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+  );
+
+  static const TextStyle mutedStyle = TextStyle(
+    color: muted,
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+  );
+
+  static const TextStyle buttonStyle = TextStyle(
+    color: text,
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+  );
+}
+
 class PdfEditorTheme {
   // Background colors
   static const Color bg = Color(0xFF0B1020);
