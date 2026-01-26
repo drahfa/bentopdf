@@ -5,6 +5,7 @@ import '../../domain/models/stamp_annotation.dart';
 import '../../domain/models/highlight_annotation.dart';
 import '../../domain/models/shape_annotation.dart';
 import '../../domain/models/ink_annotation.dart';
+import '../../domain/models/text_annotation.dart';
 
 class AnnotationResizeHandles extends StatefulWidget {
   final AnnotationBase? selectedAnnotation;
@@ -12,6 +13,7 @@ class AnnotationResizeHandles extends StatefulWidget {
   final Function(Rect newBounds) onBoundsUpdate;
   final Function(Rect newBounds) onBoundsCommit;
   final Map<String, dynamic> imageCache;
+  final VoidCallback? onCenterDoubleTap;
 
   const AnnotationResizeHandles({
     super.key,
@@ -20,6 +22,7 @@ class AnnotationResizeHandles extends StatefulWidget {
     required this.onBoundsUpdate,
     required this.onBoundsCommit,
     required this.imageCache,
+    this.onCenterDoubleTap,
   });
 
   @override
@@ -57,6 +60,27 @@ class _AnnotationResizeHandlesState extends State<AnnotationResizeHandles> {
       return annotation.bounds;
     } else if (annotation is ShapeAnnotation) {
       return annotation.bounds;
+    } else if (annotation is TextAnnotation) {
+      // Calculate bounds from text position and size
+      final textSpan = TextSpan(
+        text: annotation.text,
+        style: TextStyle(
+          fontSize: annotation.fontSize,
+          fontWeight: annotation.fontWeight,
+          fontFamily: annotation.fontFamily,
+        ),
+      );
+      final textPainter = TextPainter(
+        text: textSpan,
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      return Rect.fromLTWH(
+        annotation.position.dx,
+        annotation.position.dy,
+        textPainter.width,
+        textPainter.height,
+      );
     } else if (annotation is InkAnnotation) {
       // Calculate bounds from ink points
       if (annotation.points.isEmpty) return null;
@@ -271,6 +295,10 @@ class _AnnotationResizeHandlesState extends State<AnnotationResizeHandles> {
         },
         onTap: () {
           // Consume tap event to prevent canvas from deselecting
+        },
+        onDoubleTap: () {
+          // Trigger double-tap callback if available
+          widget.onCenterDoubleTap?.call();
         },
         onPanStart: (details) => _onCenterDragStart(bounds, details),
         onPanUpdate: _onCenterDragUpdate,

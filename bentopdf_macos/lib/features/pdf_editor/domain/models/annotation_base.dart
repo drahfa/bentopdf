@@ -8,6 +8,7 @@ enum AnnotationType {
   comment,
   rectangle,
   circle,
+  text,
 }
 
 abstract class AnnotationBase extends Equatable {

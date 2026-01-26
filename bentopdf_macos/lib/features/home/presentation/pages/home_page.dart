@@ -141,6 +141,9 @@ class HomePage extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          // Language selector
+          _buildLanguageSelector(context),
+          const SizedBox(width: 12),
           // Settings button
           Material(
             color: Colors.transparent,
@@ -166,6 +169,136 @@ class HomePage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  String _getLanguageFlag(Locale locale) {
+    switch (locale.languageCode) {
+      case 'en':
+        return '🇺🇸';
+      case 'es':
+        return '🇪🇸';
+      case 'fr':
+        return '🇫🇷';
+      case 'de':
+        return '🇩🇪';
+      case 'it':
+        return '🇮🇹';
+      case 'pt':
+        return '🇵🇹';
+      case 'tr':
+        return '🇹🇷';
+      case 'vi':
+        return '🇻🇳';
+      case 'zh':
+        return locale.countryCode == 'TW' ? '🇹🇼' : '🇨🇳';
+      default:
+        return '🌐';
+    }
+  }
+
+  String _getLanguageName(Locale locale) {
+    switch (locale.languageCode) {
+      case 'en':
+        return 'English';
+      case 'es':
+        return 'Español';
+      case 'fr':
+        return 'Français';
+      case 'de':
+        return 'Deutsch';
+      case 'it':
+        return 'Italiano';
+      case 'pt':
+        return 'Português';
+      case 'tr':
+        return 'Türkçe';
+      case 'vi':
+        return 'Tiếng Việt';
+      case 'zh':
+        return locale.countryCode == 'TW' ? '繁體中文' : '简体中文';
+      default:
+        return locale.languageCode.toUpperCase();
+    }
+  }
+
+  Widget _buildLanguageSelector(BuildContext context) {
+    final currentLocale = context.locale;
+    final supportedLocales = context.supportedLocales;
+
+    return PopupMenuButton<Locale>(
+      tooltip: 'Change Language',
+      offset: const Offset(0, 50),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Colors.white.withOpacity(0.10),
+          width: 1,
+        ),
+      ),
+      color: const Color(0xFF1a1f35),
+      itemBuilder: (context) {
+        return supportedLocales.map((locale) {
+          final isSelected = locale == currentLocale;
+          return PopupMenuItem<Locale>(
+            value: locale,
+            child: Row(
+              children: [
+                Text(
+                  _getLanguageFlag(locale),
+                  style: const TextStyle(fontSize: 20),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  _getLanguageName(locale),
+                  style: TextStyle(
+                    color: isSelected ? PdfEditorTheme.accent : PdfEditorTheme.text,
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+                if (isSelected) ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    size: 16,
+                    color: PdfEditorTheme.accent,
+                  ),
+                ],
+              ],
+            ),
+          );
+        }).toList();
+      },
+      onSelected: (locale) async {
+        await context.setLocale(locale);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.12),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.10),
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _getLanguageFlag(currentLocale),
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              Icons.arrow_drop_down,
+              size: 18,
+              color: PdfEditorTheme.text.withOpacity(0.7),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -3,7 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/pdf_editor_theme.dart';
 import '../../../../shared/widgets/glass_panel.dart';
 import '../../domain/models/annotation_base.dart';
+import '../../domain/models/text_annotation.dart';
+import '../../domain/models/highlight_annotation.dart';
 import '../providers/pdf_editor_provider.dart';
+import 'text_dialog.dart';
+import 'highlight_dialog.dart';
 
 class PdfInspectorSidebar extends ConsumerWidget {
   const PdfInspectorSidebar({super.key});
@@ -16,7 +20,7 @@ class PdfInspectorSidebar extends ConsumerWidget {
       child: Column(
         children: [
           // Header
-          _buildHeader(),
+          _buildHeader(ref, state),
 
           // Content
           Expanded(
@@ -27,7 +31,10 @@ class PdfInspectorSidebar extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(WidgetRef ref, PdfEditorState state) {
+    final notifier = ref.read(pdfEditorProvider.notifier);
+    final hasCopiedAnnotation = state.copiedAnnotation != null;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -38,16 +45,40 @@ class PdfInspectorSidebar extends ConsumerWidget {
           ),
         ),
       ),
-      child: const Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
+          const Text(
             'Inspector',
             style: PdfEditorTheme.headingStyle,
           ),
-          Text(
-            'Properties',
-            style: PdfEditorTheme.mutedStyle,
+          Row(
+            children: [
+              // Paste button
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 16,
+                  icon: Icon(
+                    Icons.paste_outlined,
+                    color: hasCopiedAnnotation
+                        ? PdfEditorTheme.accent
+                        : PdfEditorTheme.muted.withOpacity(0.3),
+                  ),
+                  onPressed: hasCopiedAnnotation
+                      ? () => notifier.pasteAnnotation()
+                      : null,
+                  tooltip: 'Paste',
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Properties',
+                style: PdfEditorTheme.mutedStyle,
+              ),
+            ],
           ),
         ],
       ),
@@ -152,6 +183,52 @@ class PdfInspectorSidebar extends ConsumerWidget {
                         ),
                       ),
                     ),
+                    // Edit button (for text and highlight annotations)
+                    if (annotation is TextAnnotation)
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          iconSize: 14,
+                          icon: Icon(
+                            Icons.edit_outlined,
+                            color: PdfEditorTheme.accent.withOpacity(0.75),
+                          ),
+                          onPressed: () => _showEditTextDialog(context, ref, annotation),
+                        ),
+                      ),
+                    if (annotation is HighlightAnnotation)
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          iconSize: 14,
+                          icon: Icon(
+                            Icons.edit_outlined,
+                            color: PdfEditorTheme.accent.withOpacity(0.75),
+                          ),
+                          onPressed: () => _showEditHighlightDialog(context, ref, annotation),
+                        ),
+                      ),
+                    // Copy button
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        iconSize: 14,
+                        icon: Icon(
+                          Icons.copy_outlined,
+                          color: PdfEditorTheme.accent.withOpacity(0.75),
+                        ),
+                        onPressed: () {
+                          notifier.selectAnnotation(annotation.id);
+                          notifier.copyAnnotation();
+                        },
+                      ),
+                    ),
                     // Delete button
                     SizedBox(
                       width: 24,
@@ -248,6 +325,58 @@ class PdfInspectorSidebar extends ConsumerWidget {
     );
   }
 
+  Future<void> _showEditTextDialog(
+    BuildContext context,
+    WidgetRef ref,
+    TextAnnotation annotation,
+  ) async {
+    final notifier = ref.read(pdfEditorProvider.notifier);
+
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => TextDialog(
+        initialText: annotation.text,
+        initialFontSize: annotation.fontSize,
+        initialColor: annotation.color,
+        initialFontWeight: annotation.fontWeight,
+      ),
+    );
+
+    if (result != null) {
+      notifier.updateTextAnnotation(
+        annotation.id,
+        result['text'] as String,
+        result['fontSize'] as double,
+        result['color'] as Color,
+        result['fontWeight'] as FontWeight,
+      );
+    }
+  }
+
+  Future<void> _showEditHighlightDialog(
+    BuildContext context,
+    WidgetRef ref,
+    HighlightAnnotation annotation,
+  ) async {
+    final notifier = ref.read(pdfEditorProvider.notifier);
+
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => HighlightDialog(
+        initialColor: annotation.color,
+        initialOpacity: annotation.opacity,
+      ),
+    );
+
+    if (result != null) {
+      notifier.updateHighlightAnnotation(
+        annotation.id,
+        result['color'] as Color,
+        result['opacity'] as double,
+      );
+    }
+  }
+
   IconData _getAnnotationIcon(AnnotationType type) {
     switch (type) {
       case AnnotationType.highlight:
@@ -263,6 +392,8 @@ class PdfInspectorSidebar extends ConsumerWidget {
       case AnnotationType.rectangle:
       case AnnotationType.circle:
         return Icons.rectangle_outlined;
+      case AnnotationType.text:
+        return Icons.text_fields;
     }
   }
 
@@ -282,6 +413,8 @@ class PdfInspectorSidebar extends ConsumerWidget {
         return 'Rectangle';
       case AnnotationType.circle:
         return 'Circle';
+      case AnnotationType.text:
+        return 'Text';
     }
   }
 }

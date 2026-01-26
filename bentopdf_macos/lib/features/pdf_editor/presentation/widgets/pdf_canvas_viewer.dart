@@ -11,7 +11,10 @@ import '../../domain/models/highlight_annotation.dart';
 import '../../domain/models/ink_annotation.dart';
 import '../../domain/models/signature_annotation.dart';
 import '../../domain/models/stamp_annotation.dart';
+import '../../domain/models/text_annotation.dart';
 import 'annotation_resize_handles.dart';
+import 'text_dialog.dart';
+import 'highlight_dialog.dart';
 
 class PdfCanvasViewer extends ConsumerStatefulWidget {
   const PdfCanvasViewer({super.key});
@@ -100,14 +103,14 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
           ),
           child: InteractiveViewer(
         transformationController: _transformationController,
-        minScale: 0.5,
+        minScale: 0.4,
         maxScale: 3.0,
         constrained: false,
         onInteractionEnd: (details) {
           // Sync zoom level back to state when user manually zooms
           final scale = _transformationController.value.getMaxScaleOnAxis();
           if ((scale - state.zoomLevel).abs() > 0.01) {
-            notifier.changeZoom(scale.clamp(0.5, 3.0));
+            notifier.changeZoom(scale.clamp(0.4, 3.0));
           }
         },
         child: Center(
@@ -232,6 +235,7 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
                           });
                         }
                       },
+                      onCenterDoubleTap: () => _handleCenterDoubleTap(context, notifier, state),
                       imageCache: state.imageCache,
                     ),
                   ],
@@ -301,6 +305,27 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
       return annotation.bounds;
     } else if (annotation is ShapeAnnotation) {
       return annotation.bounds;
+    } else if (annotation is TextAnnotation) {
+      // Calculate bounds from text position and size
+      final textSpan = TextSpan(
+        text: annotation.text,
+        style: TextStyle(
+          fontSize: annotation.fontSize,
+          fontWeight: annotation.fontWeight,
+          fontFamily: annotation.fontFamily,
+        ),
+      );
+      final textPainter = TextPainter(
+        text: textSpan,
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      return Rect.fromLTWH(
+        annotation.position.dx,
+        annotation.position.dy,
+        textPainter.width,
+        textPainter.height,
+      );
     } else if (annotation is InkAnnotation) {
       // Calculate bounds from ink points
       if (annotation.points.isEmpty) return null;
@@ -430,8 +455,8 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
       if (selectedAnnotation != null) {
         final bounds = _getAnnotationBounds(selectedAnnotation);
         if (bounds != null) {
-          // Check if clicking on center handle (32px at center)
-          const centerHandleSize = 32.0;
+          // Check if clicking on center handle (32px at center with 5px buffer)
+          const centerHandleSize = 42.0; // Increased from 32 to give more tolerance
           final center = bounds.center;
           final centerHandleRect = Rect.fromCenter(
             center: center,
@@ -443,8 +468,8 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
             return;
           }
 
-          // Check if clicking on resize handles (20px at corners/edges)
-          const resizeHandleSize = 20.0;
+          // Check if clicking on resize handles (20px at corners/edges with buffer)
+          const resizeHandleSize = 25.0; // Increased from 20 to give more tolerance
           final handlePositions = [
             bounds.topLeft,
             bounds.topRight,
@@ -605,6 +630,58 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
     );
   }
 
+  Future<void> _handleCenterDoubleTap(
+    BuildContext context,
+    PdfEditorNotifier notifier,
+    PdfEditorState state,
+  ) async {
+    final selectedAnnotation = state.currentPageAnnotations
+        .where((a) => a.id == state.selectedAnnotationId)
+        .firstOrNull;
+
+    if (selectedAnnotation == null) {
+      return;
+    }
+
+    if (selectedAnnotation is TextAnnotation) {
+      final result = await showDialog<Map<String, dynamic>>(
+        context: context,
+        builder: (context) => TextDialog(
+          initialText: selectedAnnotation.text,
+          initialFontSize: selectedAnnotation.fontSize,
+          initialColor: selectedAnnotation.color,
+          initialFontWeight: selectedAnnotation.fontWeight,
+        ),
+      );
+
+      if (result != null) {
+        notifier.updateTextAnnotation(
+          selectedAnnotation.id,
+          result['text'] as String,
+          result['fontSize'] as double,
+          result['color'] as Color,
+          result['fontWeight'] as FontWeight,
+        );
+      }
+    } else if (selectedAnnotation is HighlightAnnotation) {
+      final result = await showDialog<Map<String, dynamic>>(
+        context: context,
+        builder: (context) => HighlightDialog(
+          initialColor: selectedAnnotation.color,
+          initialOpacity: selectedAnnotation.opacity,
+        ),
+      );
+
+      if (result != null) {
+        notifier.updateHighlightAnnotation(
+          selectedAnnotation.id,
+          result['color'] as Color,
+          result['opacity'] as double,
+        );
+      }
+    }
+  }
+
   KeyEventResult _handleKeyEvent(
     KeyEvent event,
     PdfEditorNotifier notifier,
@@ -612,6 +689,27 @@ class _PdfCanvasViewerState extends ConsumerState<PdfCanvasViewer> {
   ) {
     // Only handle key down events
     if (event is! KeyDownEvent) {
+      return KeyEventResult.ignored;
+    }
+
+    final isMetaPressed = HardwareKeyboard.instance.isMetaPressed; // Cmd on macOS
+    final isControlPressed = HardwareKeyboard.instance.isControlPressed; // Ctrl
+
+    // Handle Cmd+C / Ctrl+C (Copy)
+    if ((isMetaPressed || isControlPressed) && event.logicalKey == LogicalKeyboardKey.keyC) {
+      if (state.selectedAnnotationId != null) {
+        notifier.copyAnnotation();
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
+    }
+
+    // Handle Cmd+V / Ctrl+V (Paste)
+    if ((isMetaPressed || isControlPressed) && event.logicalKey == LogicalKeyboardKey.keyV) {
+      if (state.copiedAnnotation != null) {
+        notifier.pasteAnnotation();
+        return KeyEventResult.handled;
+      }
       return KeyEventResult.ignored;
     }
 

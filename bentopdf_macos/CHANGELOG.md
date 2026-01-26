@@ -7,6 +7,164 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-01-26
+
+### Added
+
+#### Settings Enhancements
+- **Language Selection** - Full language picker with 10 supported languages
+  - English, German (Deutsch), Spanish (Español)
+  - French (Français), Italian (Italiano), Portuguese (Português)
+  - Turkish (Türkçe), Vietnamese (Tiếng Việt)
+  - Chinese Simplified (中文), Chinese Traditional (繁體中文)
+  - Interactive dropdown with language names in native scripts
+  - Persistent language selection using easy_localization
+
+- **Theme Selection** - Light and Dark theme options
+  - Interactive theme selector with visual feedback
+  - Light Theme option (coming soon)
+  - Dark Theme with glassmorphism (current default)
+  - State management with Riverpod
+
+#### Delete Pages Feature Enhancement
+- **Preview Before Save Workflow** - Improved deletion flow
+  - Step 1: Select pages to delete
+  - Step 2: Click "Delete Pages" button
+  - Step 3: Preview remaining pages before finalizing
+  - Step 4: Save or cancel the operation
+  - "Cancel" button to return to full page list
+  - "Save PDF" button to finalize deletion
+
+#### PDF Editor Enhancements
+- **Copy-Paste Annotations** - Duplicate annotations across pages
+  - Keyboard shortcuts: Cmd+C/Ctrl+C to copy, Cmd+V/Ctrl+V to paste
+  - UI buttons in inspector sidebar for copy and paste
+  - 20px offset for pasted annotations to avoid overlap
+  - Works with all annotation types
+
+- **Page Manipulation in PDF Editor** - Advanced page operations
+  - Delete individual pages with confirmation dialog
+  - Duplicate pages within the document
+  - Drag-to-reorder pages in sidebar
+  - Rotate individual pages (90° clockwise) with button
+  - Visual feedback and success messages
+
+- **Drawing Tool Controls** - Enhanced drawing customization
+  - Thickness slider (1-20px) for ink annotations
+  - Color picker for drawing tool
+  - Controls appear when Draw tool is selected
+
+- **Shape Tool Controls** - Complete shape customization
+  - Shape type selector (Rectangle/Circle)
+  - Thickness slider for shape outlines
+  - Color picker for shapes
+  - Dynamic controls based on selected tool
+
+- **Zoom Range Extension** - Better document overview
+  - Minimum zoom reduced from 50% to 40%
+  - Maximum zoom remains at 300%
+  - Updated zoom slider divisions (26 steps)
+  - Consistent zoom controls across toolbar and canvas
+
+- **Export Quality Improvement** - Higher resolution output
+  - Increased render scale from 3.0× (216 DPI) to 4.0× (288 DPI)
+  - 33% improvement in export quality
+  - Better preservation of annotation details
+
+#### Organize PDF Enhancements
+- **Thumbnail Previews** - Visual page representation
+  - Actual PDF page thumbnails instead of placeholder icons
+  - Grid layout with 6 columns for better overview
+  - Drag handle at top of each card for reordering
+  - Insertion indicator (glowing vertical line) during drag
+
+#### Delete Pages Tool Enhancement
+- **Thumbnail Previews** - Visual page selection
+  - Replaced PDF icon placeholders with actual page thumbnails
+  - Rendered at 0.4× scale for optimal performance
+  - Maintains 6-column grid layout
+  - Visual feedback for selected pages
+
+### Changed
+
+#### Settings Page Improvements
+- **License Information** - Updated licensing details
+  - Changed from "Open Source" to "Commercial License"
+  - Added detailed license description
+  - Clear statement: "Proprietary software. All rights reserved."
+  - Clarification on unauthorized use restrictions
+
+- **Attribution Updates** - Refined author presentation
+  - Author names no longer displayed in bold (changed from w600 to w400)
+  - Maintains clear readability with regular font weight
+  - Consistent with overall design aesthetic
+
+- **Version Bump** - Updated version information
+  - Version displayed as 1.2.0 in Settings page
+  - Consistent with pubspec.yaml and app metadata
+
+#### Rotation Quality Fixes
+- **Individual Page Rotation** - Fixed multiple rotation issues
+  - Fixed aspect ratio distortion by removing BoxFit parameters
+  - Fixed content cutoff by adding zero margins
+  - Fixed zooming problems by centering rotated content
+  - Proper page format swapping for 90°/270° rotations
+  - Consistent quality across all rotation angles
+
+#### Drag-and-Drop Improvements
+- **Organize PDF Drag Behavior** - Better user experience
+  - Changed from LongPressDraggable to regular Draggable
+  - Added visible drag handle icon at top of cards
+  - Insertion indicator instead of card highlight
+  - Clear visual feedback for drop position
+
+### Fixed
+
+#### Layout and UI Issues
+- **Inspector Sidebar Width** - Fixed button visibility
+  - Increased width from 190px to 240px
+  - Now accommodates edit, copy, and delete buttons
+  - No more button overflow
+
+- **Pages Sidebar Rendering** - Fixed blank sidebar issue
+  - Added `buildDefaultDragHandles: false` to ReorderableListView
+  - Fixed height containers and drag listeners
+  - Proper ReorderableDragStartListener configuration
+
+- **Button Layout Overflow** - Fixed pixel overflow errors
+  - Reduced button sizes from 18×18 to 16×16 pixels
+  - Adjusted spacing from 2px to 1px
+  - Eliminated RenderFlex overflow warnings
+
+### Technical Details
+
+#### New Components
+- **Settings Provider** - New state management for app settings
+  - `/lib/features/settings/presentation/providers/settings_provider.dart`
+  - AppThemeMode enum (light/dark)
+  - SettingsState with theme mode tracking
+  - SettingsNotifier for state updates
+
+#### Updated State Management
+- **Delete Pages Provider** - Enhanced with preview mode
+  - Added `previewMode` boolean to state
+  - Added `remainingPages` list for preview
+  - Split `deletePages()` into preview and save operations
+  - New `cancelPreview()` method to revert changes
+
+#### UI Components
+- **Theme Selector** - Interactive theme switching widget
+  - Two-option horizontal selector (Light/Dark)
+  - Visual feedback with gradient backgrounds
+  - Icon and text labels for each option
+
+- **Language Dropdown** - Multi-language selector
+  - DropdownButton with 10 language options
+  - Native language names displayed
+  - Locale persistence with easy_localization
+
+---
+
 ## [1.1.0] - 2026-01-25
 
 ### Added

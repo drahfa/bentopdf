@@ -71,30 +71,46 @@ class PdfPagesSidebar extends ConsumerWidget {
       );
     }
 
-    return GridView.builder(
+    // Watch for annotation changes by referencing state
+    final _ = state.currentPageAnnotations;
+
+    return ReorderableListView.builder(
       padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 1,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.7,
-      ),
+      buildDefaultDragHandles: false,
       itemCount: state.totalPages,
+      onReorder: (oldIndex, newIndex) {
+        // Create new order list
+        final newOrder = List<int>.generate(state.totalPages, (i) => i + 1);
+        final item = newOrder.removeAt(oldIndex);
+
+        // Adjust newIndex if moving down
+        if (newIndex > oldIndex) {
+          newIndex -= 1;
+        }
+
+        newOrder.insert(newIndex, item);
+        notifier.reorderPages(newOrder);
+      },
       itemBuilder: (context, index) {
         final pageNumber = index + 1;
         final isActive = pageNumber == state.currentPageNumber;
 
-        // Watch for annotation changes by referencing state
-        // This ensures thumbnails rebuild when annotations change
-        final _ = state.currentPageAnnotations;
-
-        return PageThumbnailWidget(
-          key: ValueKey('thumbnail_$pageNumber\_${state.currentPageAnnotations.length}'),
-          pageNumber: pageNumber,
-          isActive: isActive,
-          document: state.document,
-          imageCache: state.imageCache,
-          onTap: () => notifier.goToPage(pageNumber),
+        return Container(
+          key: ValueKey('thumbnail_$pageNumber'),
+          height: 200,
+          margin: const EdgeInsets.only(bottom: 12),
+          child: PageThumbnailWidget(
+            pageNumber: pageNumber,
+            isActive: isActive,
+            document: state.document,
+            imageCache: state.imageCache,
+            totalPages: state.totalPages,
+            index: index,
+            onTap: () => notifier.goToPage(pageNumber),
+            onDelete: () => notifier.deletePage(pageNumber),
+            onDuplicate: () => notifier.duplicatePage(pageNumber),
+            onRotate: () => notifier.rotatePage(pageNumber, 90),
+          ),
         );
       },
     );
@@ -107,7 +123,12 @@ class PageThumbnailWidget extends ConsumerStatefulWidget {
   final bool isActive;
   final pdfx.PdfDocument? document;
   final Map<String, ui.Image> imageCache;
+  final int totalPages;
+  final int index;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
+  final VoidCallback onDuplicate;
+  final VoidCallback onRotate;
 
   const PageThumbnailWidget({
     super.key,
@@ -115,7 +136,12 @@ class PageThumbnailWidget extends ConsumerStatefulWidget {
     required this.isActive,
     required this.document,
     required this.imageCache,
+    required this.totalPages,
+    required this.index,
     required this.onTap,
+    required this.onDelete,
+    required this.onDuplicate,
+    required this.onRotate,
   });
 
   @override
@@ -176,7 +202,7 @@ class _PageThumbnailWidgetState extends ConsumerState<PageThumbnailWidget> {
                 ),
               ),
 
-              // Page label
+              // Page label and actions
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -193,15 +219,82 @@ class _PageThumbnailWidgetState extends ConsumerState<PageThumbnailWidget> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Page ${widget.pageNumber}',
-                      style: TextStyle(
-                        color: widget.isActive
-                            ? PdfEditorTheme.text
-                            : PdfEditorTheme.muted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ReorderableDragStartListener(
+                          index: widget.index,
+                          child: Icon(
+                            Icons.drag_indicator,
+                            size: 16,
+                            color: PdfEditorTheme.muted.withOpacity(0.5),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Page ${widget.pageNumber}',
+                          style: TextStyle(
+                            color: widget.isActive
+                                ? PdfEditorTheme.text
+                                : PdfEditorTheme.muted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Duplicate button
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            iconSize: 12,
+                            icon: Icon(
+                              Icons.copy_outlined,
+                              color: PdfEditorTheme.accent.withOpacity(0.75),
+                            ),
+                            onPressed: widget.onDuplicate,
+                            tooltip: 'Duplicate',
+                          ),
+                        ),
+                        const SizedBox(width: 1),
+                        // Rotate button
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            iconSize: 12,
+                            icon: Icon(
+                              Icons.rotate_right,
+                              color: PdfEditorTheme.accent.withOpacity(0.75),
+                            ),
+                            onPressed: widget.onRotate,
+                            tooltip: 'Rotate 90°',
+                          ),
+                        ),
+                        const SizedBox(width: 1),
+                        // Delete button
+                        if (widget.totalPages > 1)
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              iconSize: 12,
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: PdfEditorTheme.danger.withOpacity(0.75),
+                              ),
+                              onPressed: () => _showDeleteConfirmation(context),
+                              tooltip: 'Delete',
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 ),
@@ -293,6 +386,43 @@ class _PageThumbnailWidgetState extends ConsumerState<PageThumbnailWidget> {
       return pageImage;
     } catch (e) {
       return null;
+    }
+  }
+
+  Future<void> _showDeleteConfirmation(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        title: const Text(
+          'Delete Page?',
+          style: TextStyle(color: PdfEditorTheme.text),
+        ),
+        content: Text(
+          'Are you sure you want to delete page ${widget.pageNumber}? This action cannot be undone.',
+          style: const TextStyle(color: PdfEditorTheme.muted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: PdfEditorTheme.muted),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: PdfEditorTheme.danger),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      widget.onDelete();
     }
   }
 }

@@ -128,7 +128,7 @@ class AnnotationToolbar extends ConsumerWidget {
             icon: const Icon(Icons.zoom_out),
             tooltip: 'Zoom Out',
             onPressed: () {
-              final newZoom = (state.zoomLevel - 0.1).clamp(0.5, 3.0);
+              final newZoom = (state.zoomLevel - 0.1).clamp(0.4, 3.0);
               notifier.changeZoom(newZoom);
             },
           ),
@@ -136,9 +136,9 @@ class AnnotationToolbar extends ConsumerWidget {
             width: 120,
             child: Slider(
               value: state.zoomLevel,
-              min: 0.5,
+              min: 0.4,
               max: 3.0,
-              divisions: 25,
+              divisions: 26,
               label: '${(state.zoomLevel * 100).toInt()}%',
               onChanged: (value) => notifier.changeZoom(value),
             ),
@@ -147,7 +147,7 @@ class AnnotationToolbar extends ConsumerWidget {
             icon: const Icon(Icons.zoom_in),
             tooltip: 'Zoom In',
             onPressed: () {
-              final newZoom = (state.zoomLevel + 0.1).clamp(0.5, 3.0);
+              final newZoom = (state.zoomLevel + 0.1).clamp(0.4, 3.0);
               notifier.changeZoom(newZoom);
             },
           ),

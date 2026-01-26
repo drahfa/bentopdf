@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:pdfcow/core/di/service_providers.dart';
 import 'package:pdfcow/shared/services/pdf_manipulation_service.dart';
 import 'package:pdfcow/shared/services/file_service.dart';
@@ -25,6 +27,7 @@ class PageItem {
 
 class OrganizePdfState {
   final String? filePath;
+  final pdfx.PdfDocument? document;
   final int? pageCount;
   final List<PageItem> pages;
   final bool isProcessing;
@@ -33,6 +36,7 @@ class OrganizePdfState {
 
   const OrganizePdfState({
     this.filePath,
+    this.document,
     this.pageCount,
     this.pages = const [],
     this.isProcessing = false,
@@ -42,6 +46,7 @@ class OrganizePdfState {
 
   OrganizePdfState copyWith({
     String? filePath,
+    pdfx.PdfDocument? document,
     int? pageCount,
     List<PageItem>? pages,
     bool? isProcessing,
@@ -50,6 +55,7 @@ class OrganizePdfState {
   }) {
     return OrganizePdfState(
       filePath: filePath ?? this.filePath,
+      document: document ?? this.document,
       pageCount: pageCount ?? this.pageCount,
       pages: pages ?? this.pages,
       isProcessing: isProcessing ?? this.isProcessing,
@@ -71,7 +77,12 @@ class OrganizePdfNotifier extends StateNotifier<OrganizePdfState> {
     if (filePath == null) return;
 
     try {
-      final pageCount = await _pdfService.getPageCount(filePath);
+      // Load PDF document
+      final file = File(filePath);
+      final bytes = await file.readAsBytes();
+      final document = await pdfx.PdfDocument.openData(bytes);
+
+      final pageCount = document.pagesCount;
       final pages = List.generate(
         pageCount,
         (i) => PageItem(
@@ -82,6 +93,7 @@ class OrganizePdfNotifier extends StateNotifier<OrganizePdfState> {
 
       state = state.copyWith(
         filePath: filePath,
+        document: document,
         pageCount: pageCount,
         pages: pages,
         error: null,

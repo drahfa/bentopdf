@@ -1,40 +1,54 @@
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:pdfcow/core/di/service_providers.dart';
 import 'package:pdfcow/shared/services/pdf_manipulation_service.dart';
 import 'package:pdfcow/shared/services/file_service.dart';
 
 class DeletePagesState {
   final String? filePath;
+  final pdfx.PdfDocument? document;
   final int? pageCount;
   final Set<int> selectedPages;
   final bool isProcessing;
   final String? error;
   final String? successMessage;
+  final bool previewMode;
+  final List<int>? remainingPages;
 
   const DeletePagesState({
     this.filePath,
+    this.document,
     this.pageCount,
     this.selectedPages = const {},
     this.isProcessing = false,
     this.error,
     this.successMessage,
+    this.previewMode = false,
+    this.remainingPages,
   });
 
   DeletePagesState copyWith({
     String? filePath,
+    pdfx.PdfDocument? document,
     int? pageCount,
     Set<int>? selectedPages,
     bool? isProcessing,
     String? error,
     String? successMessage,
+    bool? previewMode,
+    List<int>? remainingPages,
   }) {
     return DeletePagesState(
       filePath: filePath ?? this.filePath,
+      document: document ?? this.document,
       pageCount: pageCount ?? this.pageCount,
       selectedPages: selectedPages ?? this.selectedPages,
       isProcessing: isProcessing ?? this.isProcessing,
       error: error,
       successMessage: successMessage,
+      previewMode: previewMode ?? this.previewMode,
+      remainingPages: remainingPages ?? this.remainingPages,
     );
   }
 }
@@ -51,9 +65,15 @@ class DeletePagesNotifier extends StateNotifier<DeletePagesState> {
     if (filePath == null) return;
 
     try {
-      final pageCount = await _pdfService.getPageCount(filePath);
+      // Load PDF document
+      final file = File(filePath);
+      final bytes = await file.readAsBytes();
+      final document = await pdfx.PdfDocument.openData(bytes);
+
+      final pageCount = document.pagesCount;
       state = state.copyWith(
         filePath: filePath,
+        document: document,
         pageCount: pageCount,
         selectedPages: {},
         error: null,
@@ -91,7 +111,7 @@ class DeletePagesNotifier extends StateNotifier<DeletePagesState> {
     state = state.copyWith(successMessage: null);
   }
 
-  Future<void> deletePages() async {
+  void deletePages() {
     if (state.filePath == null) {
       state = state.copyWith(error: 'Please select a PDF file');
       return;
@@ -104,6 +124,30 @@ class DeletePagesNotifier extends StateNotifier<DeletePagesState> {
 
     if (state.selectedPages.length >= (state.pageCount ?? 0)) {
       state = state.copyWith(error: 'Cannot delete all pages');
+      return;
+    }
+
+    // Calculate remaining pages
+    final allPages = List.generate(state.pageCount!, (i) => i + 1);
+    final remaining = allPages.where((p) => !state.selectedPages.contains(p)).toList();
+
+    // Enter preview mode
+    state = state.copyWith(
+      previewMode: true,
+      remainingPages: remaining,
+      error: null,
+    );
+  }
+
+  void cancelPreview() {
+    state = state.copyWith(
+      previewMode: false,
+      remainingPages: null,
+    );
+  }
+
+  Future<void> savePdf() async {
+    if (state.filePath == null || !state.previewMode) {
       return;
     }
 
@@ -125,6 +169,8 @@ class DeletePagesNotifier extends StateNotifier<DeletePagesState> {
           isProcessing: false,
           successMessage: 'Pages deleted successfully!',
           selectedPages: {},
+          previewMode: false,
+          remainingPages: null,
         );
       } else {
         state = state.copyWith(

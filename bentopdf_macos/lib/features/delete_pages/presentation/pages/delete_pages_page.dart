@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:pdfcow/features/delete_pages/presentation/providers/delete_pages_provider.dart';
 import 'package:pdfcow/core/theme/pdf_editor_theme.dart';
 import 'package:pdfcow/shared/widgets/glass_panel.dart';
@@ -43,7 +44,7 @@ class DeletePagesPage extends ConsumerWidget {
                   Expanded(child: _buildPageGrid(context, ref, state))
                 else
                   Expanded(child: _buildEmptyState(context, ref)),
-                if (state.selectedPages.isNotEmpty) _buildBottomBar(context, ref, state),
+                if (state.selectedPages.isNotEmpty || state.previewMode) _buildBottomBar(context, ref, state),
               ],
             ),
           ],
@@ -122,7 +123,7 @@ class DeletePagesPage extends ConsumerWidget {
               ),
             ),
             const Spacer(),
-            if (state.filePath != null && state.selectedPages.isNotEmpty)
+            if (state.filePath != null && state.selectedPages.isNotEmpty && !state.previewMode)
               Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -139,8 +140,8 @@ class DeletePagesPage extends ConsumerWidget {
                   ),
                 ),
               ),
-            if (state.filePath != null) const SizedBox(width: 8),
-            if (state.filePath != null)
+            if (state.filePath != null && !state.previewMode) const SizedBox(width: 8),
+            if (state.filePath != null && !state.previewMode)
               Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -270,6 +271,11 @@ class DeletePagesPage extends ConsumerWidget {
   }
 
   Widget _buildPageGrid(BuildContext context, WidgetRef ref, DeletePagesState state) {
+    // In preview mode, show only remaining pages
+    final pages = state.previewMode && state.remainingPages != null
+        ? state.remainingPages!
+        : List.generate(state.pageCount!, (i) => i + 1);
+
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -278,61 +284,108 @@ class DeletePagesPage extends ConsumerWidget {
         mainAxisSpacing: 12,
         childAspectRatio: 0.7,
       ),
-      itemCount: state.pageCount!,
+      itemCount: pages.length,
       itemBuilder: (context, index) {
-        final pageNumber = index + 1;
-        final isSelected = state.selectedPages.contains(pageNumber);
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => ref.read(deletePagesProvider.notifier).togglePage(pageNumber),
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: isSelected
-                    ? LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          PdfEditorTheme.danger.withOpacity(0.20),
-                          PdfEditorTheme.danger.withOpacity(0.12),
-                        ],
-                      )
-                    : PdfEditorTheme.glassGradient,
-                border: Border.all(
-                  color: isSelected ? PdfEditorTheme.danger.withOpacity(0.35) : Colors.white.withOpacity(0.10),
-                  width: 1,
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.picture_as_pdf,
-                    size: 48,
-                    color: isSelected ? PdfEditorTheme.danger : PdfEditorTheme.muted,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Page $pageNumber',
-                    style: TextStyle(color: isSelected ? PdfEditorTheme.text : PdfEditorTheme.muted, fontSize: 12, fontWeight: FontWeight.w500),
-                  ),
-                  if (isSelected)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Icon(Icons.check_circle, color: PdfEditorTheme.danger, size: 20),
-                    ),
-                ],
-              ),
-            ),
-          ),
+        final pageNumber = pages[index];
+        final isSelected = !state.previewMode && state.selectedPages.contains(pageNumber);
+        return _PageCard(
+          pageNumber: pageNumber,
+          isSelected: isSelected,
+          document: state.document,
+          onTap: state.previewMode ? () {} : () => ref.read(deletePagesProvider.notifier).togglePage(pageNumber),
         );
       },
     );
   }
 
   Widget _buildBottomBar(BuildContext context, WidgetRef ref, DeletePagesState state) {
+    if (state.previewMode) {
+      // Preview mode: show remaining pages info and Save/Cancel buttons
+      return GlassPanel(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Text(
+                '${state.remainingPages?.length ?? 0} page(s) remaining',
+                style: const TextStyle(color: PdfEditorTheme.text, fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+              const Spacer(),
+              // Cancel button
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: state.isProcessing ? null : () => ref.read(deletePagesProvider.notifier).cancelPreview(),
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.18),
+                      border: Border.all(color: Colors.white.withOpacity(0.10), width: 1),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: PdfEditorTheme.text, fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Save PDF button
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: state.isProcessing ? null : () => ref.read(deletePagesProvider.notifier).savePdf(),
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                    decoration: state.isProcessing
+                        ? BoxDecoration(
+                            color: Colors.black.withOpacity(0.18),
+                            border: Border.all(color: Colors.white.withOpacity(0.10), width: 1),
+                            borderRadius: BorderRadius.circular(999),
+                          )
+                        : BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                PdfEditorTheme.accent2.withOpacity(0.40),
+                                PdfEditorTheme.accent2.withOpacity(0.30),
+                              ],
+                            ),
+                            border: Border.all(color: PdfEditorTheme.accent2.withOpacity(0.35), width: 1),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (state.isProcessing)
+                          const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(PdfEditorTheme.text)),
+                          )
+                        else
+                          const Icon(Icons.save, size: 18, color: PdfEditorTheme.text),
+                        const SizedBox(width: 8),
+                        Text(
+                          state.isProcessing ? 'Saving...' : 'Save PDF',
+                          style: const TextStyle(color: PdfEditorTheme.text, fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Normal mode: show selected pages and Delete Pages button
     return GlassPanel(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -346,43 +399,30 @@ class DeletePagesPage extends ConsumerWidget {
             Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: state.isProcessing ? null : () => ref.read(deletePagesProvider.notifier).deletePages(),
+                onTap: () => ref.read(deletePagesProvider.notifier).deletePages(),
                 borderRadius: BorderRadius.circular(999),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                  decoration: state.isProcessing
-                      ? BoxDecoration(
-                          color: Colors.black.withOpacity(0.18),
-                          border: Border.all(color: Colors.white.withOpacity(0.10), width: 1),
-                          borderRadius: BorderRadius.circular(999),
-                        )
-                      : BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              PdfEditorTheme.danger.withOpacity(0.40),
-                              PdfEditorTheme.danger.withOpacity(0.30),
-                            ],
-                          ),
-                          border: Border.all(color: PdfEditorTheme.danger.withOpacity(0.35), width: 1),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                  child: Row(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        PdfEditorTheme.danger.withOpacity(0.40),
+                        PdfEditorTheme.danger.withOpacity(0.30),
+                      ],
+                    ),
+                    border: Border.all(color: PdfEditorTheme.danger.withOpacity(0.35), width: 1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (state.isProcessing)
-                        const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(PdfEditorTheme.text)),
-                        )
-                      else
-                        const Icon(Icons.delete, size: 18, color: PdfEditorTheme.text),
-                      const SizedBox(width: 8),
+                      Icon(Icons.delete, size: 18, color: PdfEditorTheme.text),
+                      SizedBox(width: 8),
                       Text(
-                        state.isProcessing ? 'Deleting...' : 'Delete Pages',
-                        style: const TextStyle(color: PdfEditorTheme.text, fontSize: 13, fontWeight: FontWeight.w600),
+                        'Delete Pages',
+                        style: TextStyle(color: PdfEditorTheme.text, fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -393,5 +433,171 @@ class DeletePagesPage extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+class _PageCard extends StatefulWidget {
+  final int pageNumber;
+  final bool isSelected;
+  final pdfx.PdfDocument? document;
+  final VoidCallback onTap;
+
+  const _PageCard({
+    required this.pageNumber,
+    required this.isSelected,
+    required this.document,
+    required this.onTap,
+  });
+
+  @override
+  State<_PageCard> createState() => _PageCardState();
+}
+
+class _PageCardState extends State<_PageCard> {
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: widget.onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: widget.isSelected
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      PdfEditorTheme.danger.withOpacity(0.20),
+                      PdfEditorTheme.danger.withOpacity(0.12),
+                    ],
+                  )
+                : PdfEditorTheme.glassGradient,
+            border: Border.all(
+              color: widget.isSelected ? PdfEditorTheme.danger.withOpacity(0.35) : Colors.white.withOpacity(0.10),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: _buildThumbnail(),
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: Colors.white.withOpacity(0.08),
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Page ${widget.pageNumber}',
+                      style: TextStyle(
+                        color: widget.isSelected ? PdfEditorTheme.text : PdfEditorTheme.muted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    if (widget.isSelected) ...[
+                      const SizedBox(width: 6),
+                      Icon(Icons.check_circle, color: PdfEditorTheme.danger, size: 16),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThumbnail() {
+    if (widget.document == null) {
+      return Container(
+        color: Colors.white.withOpacity(0.08),
+        child: Center(
+          child: Icon(
+            Icons.description_outlined,
+            size: 32,
+            color: PdfEditorTheme.muted.withOpacity(0.5),
+          ),
+        ),
+      );
+    }
+
+    return FutureBuilder<pdfx.PdfPageImage?>(
+      future: _renderPageThumbnail(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            color: Colors.white.withOpacity(0.08),
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    PdfEditorTheme.muted.withOpacity(0.5),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data == null) {
+          return Container(
+            color: Colors.white.withOpacity(0.08),
+            child: Center(
+              child: Icon(
+                Icons.description_outlined,
+                size: 32,
+                color: PdfEditorTheme.muted.withOpacity(0.5),
+              ),
+            ),
+          );
+        }
+
+        return Container(
+          color: Colors.white,
+          child: Image.memory(
+            snapshot.data!.bytes,
+            fit: BoxFit.contain,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<pdfx.PdfPageImage?> _renderPageThumbnail() async {
+    if (widget.document == null) return null;
+
+    try {
+      final page = await widget.document!.getPage(widget.pageNumber);
+      final pageImage = await page.render(
+        width: page.width * 0.4,
+        height: page.height * 0.4,
+        format: pdfx.PdfPageImageFormat.png,
+      );
+      await page.close();
+      return pageImage;
+    } catch (e) {
+      return null;
+    }
   }
 }

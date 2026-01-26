@@ -2,7 +2,7 @@ name: pdfcow
 description: "SitiPDF: PDF Editor - Native macOS PDF toolkit with 95+ tools"
 publish_to: 'none'
 
-version: 1.1.0+2
+version: 1.2.0+3
 
 environment:
   sdk: ^3.10.7

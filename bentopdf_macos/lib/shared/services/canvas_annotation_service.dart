@@ -14,6 +14,7 @@ enum AnnotationTool {
   comment,
   rectangle,
   circle,
+  text,
 }
 
 class CanvasAnnotationService {
@@ -140,6 +141,20 @@ class CanvasAnnotationService {
           annotation as dynamic;
       final distance = (commentAnnotation.position - position).distance;
       return distance <= 12;
+    } else if (annotation.type == AnnotationType.text) {
+      final textAnnotation = annotation as dynamic;
+      final textPosition = textAnnotation.position as Offset;
+      final fontSize = (textAnnotation.fontSize as num?)?.toDouble() ?? 16.0;
+      final text = textAnnotation.text as String;
+      final estimatedWidth = text.length * fontSize * 0.6;
+      final estimatedHeight = fontSize * 1.5;
+      final bounds = Rect.fromLTWH(
+        textPosition.dx,
+        textPosition.dy,
+        estimatedWidth,
+        estimatedHeight,
+      );
+      return bounds.contains(position);
     } else if (annotation.type == AnnotationType.ink) {
       final inkAnnotation = annotation as dynamic;
       for (final point in inkAnnotation.points) {

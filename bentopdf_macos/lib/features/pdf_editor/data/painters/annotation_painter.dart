@@ -7,6 +7,7 @@ import '../../domain/models/shape_annotation.dart';
 import '../../domain/models/signature_annotation.dart';
 import '../../domain/models/stamp_annotation.dart';
 import '../../domain/models/comment_annotation.dart';
+import '../../domain/models/text_annotation.dart';
 
 class AnnotationPainter extends CustomPainter {
   final List<AnnotationBase> annotations;
@@ -49,6 +50,9 @@ class AnnotationPainter extends CustomPainter {
           break;
         case AnnotationType.comment:
           _paintComment(canvas, annotation as CommentAnnotation);
+          break;
+        case AnnotationType.text:
+          _paintText(canvas, annotation as TextAnnotation);
           break;
       }
 
@@ -182,6 +186,26 @@ class AnnotationPainter extends CustomPainter {
     );
   }
 
+  void _paintText(Canvas canvas, TextAnnotation annotation) {
+    final textSpan = TextSpan(
+      text: annotation.text,
+      style: TextStyle(
+        color: annotation.color,
+        fontSize: annotation.fontSize,
+        fontWeight: annotation.fontWeight,
+        fontFamily: annotation.fontFamily,
+      ),
+    );
+
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+    );
+
+    textPainter.layout();
+    textPainter.paint(canvas, annotation.position);
+  }
+
   void _paintSelectionBorder(Canvas canvas, AnnotationBase annotation) {
     Rect bounds;
 
@@ -195,6 +219,26 @@ class AnnotationPainter extends CustomPainter {
       bounds = annotation.bounds;
     } else if (annotation is CommentAnnotation) {
       bounds = Rect.fromCircle(center: annotation.position, radius: 12);
+    } else if (annotation is TextAnnotation) {
+      final textSpan = TextSpan(
+        text: annotation.text,
+        style: TextStyle(
+          fontSize: annotation.fontSize,
+          fontWeight: annotation.fontWeight,
+          fontFamily: annotation.fontFamily,
+        ),
+      );
+      final textPainter = TextPainter(
+        text: textSpan,
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      bounds = Rect.fromLTWH(
+        annotation.position.dx,
+        annotation.position.dy,
+        textPainter.width,
+        textPainter.height,
+      );
     } else if (annotation is InkAnnotation) {
       if (annotation.points.isEmpty) return;
       double left = annotation.points[0].dx;

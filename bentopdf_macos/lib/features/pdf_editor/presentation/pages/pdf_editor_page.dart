@@ -341,7 +341,7 @@ class _PdfEditorPageState extends ConsumerState<PdfEditorPage> {
 
                 // Right sidebar - Inspector
                 const SizedBox(
-                  width: 190,
+                  width: 240,
                   child: PdfInspectorSidebar(),
                 ),
               ],

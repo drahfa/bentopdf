@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pdfcow/core/theme/pdf_editor_theme.dart';
 import 'package:pdfcow/shared/widgets/glass_panel.dart';
+import 'package:pdfcow/features/settings/presentation/providers/settings_provider.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
     return Scaffold(
       body: Container(
         decoration: PdfEditorTheme.backgroundDecoration,
@@ -47,9 +50,9 @@ class SettingsPage extends StatelessWidget {
                           children: [
                             _buildSectionTitle('Settings'),
                             const SizedBox(height: 24),
-                            _buildAppearanceSection(),
+                            _buildAppearanceSection(ref, settings),
                             const SizedBox(height: 24),
-                            _buildLanguageSection(context),
+                            _buildLanguageSection(context, ref),
                             const SizedBox(height: 24),
                             _buildAboutSection(),
                             const SizedBox(height: 40),
@@ -161,7 +164,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAppearanceSection() {
+  Widget _buildAppearanceSection(WidgetRef ref, SettingsState settings) {
     return GlassPanel(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -199,18 +202,149 @@ class SettingsPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            _buildSettingItem(
-              'Theme',
-              'Dark mode (Glassmorphism)',
-              Icons.dark_mode,
-            ),
+            _buildThemeSelector(ref, settings),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLanguageSection(BuildContext context) {
+  Widget _buildThemeSelector(WidgetRef ref, SettingsState settings) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.18),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.10),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                settings.themeMode == AppThemeMode.dark
+                    ? Icons.dark_mode
+                    : Icons.light_mode,
+                size: 18,
+                color: PdfEditorTheme.muted,
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Theme',
+                style: TextStyle(
+                  color: PdfEditorTheme.text,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildThemeOption(
+                  ref,
+                  AppThemeMode.light,
+                  'Light Theme',
+                  Icons.light_mode,
+                  settings.themeMode == AppThemeMode.light,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildThemeOption(
+                  ref,
+                  AppThemeMode.dark,
+                  'Dark Theme',
+                  Icons.dark_mode,
+                  settings.themeMode == AppThemeMode.dark,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThemeOption(
+    WidgetRef ref,
+    AppThemeMode mode,
+    String label,
+    IconData icon,
+    bool isSelected,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => ref.read(settingsProvider.notifier).setThemeMode(mode),
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            gradient: isSelected
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      PdfEditorTheme.accent.withOpacity(0.30),
+                      PdfEditorTheme.accent.withOpacity(0.20),
+                    ],
+                  )
+                : null,
+            color: isSelected ? null : Colors.black.withOpacity(0.12),
+            border: Border.all(
+              color: isSelected
+                  ? PdfEditorTheme.accent.withOpacity(0.50)
+                  : Colors.white.withOpacity(0.08),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected ? PdfEditorTheme.text : PdfEditorTheme.muted,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color:
+                      isSelected ? PdfEditorTheme.text : PdfEditorTheme.muted,
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageSection(BuildContext context, WidgetRef ref) {
+    final languageMap = {
+      'en': 'English',
+      'de': 'Deutsch (German)',
+      'es': 'Español (Spanish)',
+      'fr': 'Français (French)',
+      'it': 'Italiano (Italian)',
+      'pt': 'Português (Portuguese)',
+      'tr': 'Türkçe (Turkish)',
+      'vi': 'Tiếng Việt (Vietnamese)',
+      'zh': '中文 (Chinese Simplified)',
+      'zh-TW': '繁體中文 (Chinese Traditional)',
+    };
+
     return GlassPanel(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -248,10 +382,97 @@ class SettingsPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            _buildSettingItem(
-              'App Language',
-              context.locale.languageCode == 'en' ? 'English' : 'Malay',
-              Icons.translate,
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.18),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.10),
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.translate,
+                        size: 18,
+                        color: PdfEditorTheme.muted,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'App Language',
+                        style: TextStyle(
+                          color: PdfEditorTheme.text,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.25),
+                        border: Border.all(
+                          color: PdfEditorTheme.accent2.withOpacity(0.25),
+                          width: 1,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: context.locale.toString(),
+                          isExpanded: true,
+                          dropdownColor: const Color(0xFF1a1f35),
+                          style: const TextStyle(
+                            color: PdfEditorTheme.text,
+                            fontSize: 13,
+                          ),
+                          icon: const Icon(
+                            Icons.arrow_drop_down,
+                            color: PdfEditorTheme.accent2,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          items: languageMap.entries.map((entry) {
+                            return DropdownMenuItem<String>(
+                              value: entry.key,
+                              child: Text(
+                                entry.value,
+                                style: const TextStyle(
+                                  color: PdfEditorTheme.text,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (String? newLocale) {
+                            if (newLocale != null) {
+                              final localeParts = newLocale.split('-');
+                              context.setLocale(
+                                Locale(
+                                  localeParts[0],
+                                  localeParts.length > 1
+                                      ? localeParts[1]
+                                      : null,
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -299,14 +520,15 @@ class SettingsPage extends StatelessWidget {
             const SizedBox(height: 16),
             _buildSettingItem(
               'Version',
-              '1.1.0',
+              '1.2.0',
               Icons.tag,
             ),
             const SizedBox(height: 12),
-            _buildSettingItem(
+            _buildSettingItemWithSubtitle(
               'License',
-              'Open Source',
-              Icons.code,
+              'Commercial License',
+              'Proprietary software. All rights reserved. Unauthorized distribution, modification, or commercial use is prohibited.',
+              Icons.verified_user,
             ),
           ],
         ),
@@ -351,6 +573,65 @@ class SettingsPage extends StatelessWidget {
                   style: const TextStyle(
                     color: PdfEditorTheme.muted,
                     fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingItemWithSubtitle(
+      String title, String value, String subtitle, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.18),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.10),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: PdfEditorTheme.muted,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: PdfEditorTheme.text,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: PdfEditorTheme.text,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: PdfEditorTheme.muted.withOpacity(0.8),
+                    fontSize: 11,
+                    height: 1.4,
                   ),
                 ),
               ],
@@ -421,7 +702,7 @@ class SettingsPage extends StatelessWidget {
             style: TextStyle(
               color: PdfEditorTheme.text,
               fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w400,
               letterSpacing: 0.2,
               height: 1.5,
             ),

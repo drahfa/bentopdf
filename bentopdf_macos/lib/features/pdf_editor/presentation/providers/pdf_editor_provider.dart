@@ -12,8 +12,10 @@ import '../../domain/models/shape_annotation.dart';
 import '../../domain/models/signature_annotation.dart';
 import '../../domain/models/stamp_annotation.dart';
 import '../../domain/models/comment_annotation.dart';
+import '../../domain/models/text_annotation.dart';
 import '../../../../shared/services/canvas_annotation_service.dart';
 import '../../../../shared/services/pdf_export_service.dart';
+import '../../../../shared/services/pdf_manipulation_service.dart';
 import '../../../../shared/services/file_service.dart';
 import '../../../../core/di/service_providers.dart';
 
@@ -38,6 +40,7 @@ class PdfEditorState {
   final bool showCommentSidebar;
   final double exportProgress;
   final Map<String, ui.Image> imageCache;
+  final AnnotationBase? copiedAnnotation;
 
   const PdfEditorState({
     this.filePath,
@@ -50,7 +53,7 @@ class PdfEditorState {
     this.selectedTool = AnnotationTool.pan,
     this.selectedColor = Colors.yellow,
     this.thickness = 2.0,
-    this.opacity = 1.0,
+    this.opacity = 0.3,
     this.zoomLevel = 0.5,
     this.currentPageAnnotations = const [],
     this.selectedAnnotationId,
@@ -60,6 +63,7 @@ class PdfEditorState {
     this.showCommentSidebar = false,
     this.exportProgress = 0.0,
     this.imageCache = const {},
+    this.copiedAnnotation,
   });
 
   PdfEditorState copyWith({
@@ -83,6 +87,7 @@ class PdfEditorState {
     bool? showCommentSidebar,
     double? exportProgress,
     Map<String, ui.Image>? imageCache,
+    AnnotationBase? copiedAnnotation,
   }) {
     return PdfEditorState(
       filePath: filePath ?? this.filePath,
@@ -106,6 +111,7 @@ class PdfEditorState {
       showCommentSidebar: showCommentSidebar ?? this.showCommentSidebar,
       exportProgress: exportProgress ?? this.exportProgress,
       imageCache: imageCache ?? this.imageCache,
+      copiedAnnotation: copiedAnnotation ?? this.copiedAnnotation,
     );
   }
 }
@@ -113,15 +119,18 @@ class PdfEditorState {
 class PdfEditorNotifier extends StateNotifier<PdfEditorState> {
   final CanvasAnnotationService _annotationService;
   final PdfExportService _exportService;
+  final PdfManipulationService _manipulationService;
   final FileService _fileService;
   final Random _random = Random();
 
   PdfEditorNotifier({
     required CanvasAnnotationService annotationService,
     required PdfExportService exportService,
+    required PdfManipulationService manipulationService,
     required FileService fileService,
   })  : _annotationService = annotationService,
         _exportService = exportService,
+        _manipulationService = manipulationService,
         _fileService = fileService,
         super(const PdfEditorState());
 
@@ -439,12 +448,31 @@ class PdfEditorNotifier extends StateNotifier<PdfEditorState> {
         thickness: annotation.thickness,
         opacity: annotation.opacity,
       );
+    } else if (annotation is TextAnnotation) {
+      // Update text position based on new bounds
+      updatedAnnotation = TextAnnotation(
+        id: annotation.id,
+        pageNumber: annotation.pageNumber,
+        createdAt: annotation.createdAt,
+        text: annotation.text,
+        position: newBounds.topLeft,
+        color: annotation.color,
+        fontSize: annotation.fontSize,
+        fontWeight: annotation.fontWeight,
+        fontFamily: annotation.fontFamily,
+      );
     } else {
       return;
     }
 
     _annotationService.addAnnotation(state.currentPageNumber, updatedAnnotation);
-    _refreshAnnotations();
+
+    // Refresh annotations while maintaining selection
+    final refreshedAnnotations = _annotationService.getAnnotationsForPage(state.currentPageNumber);
+    state = state.copyWith(
+      currentPageAnnotations: refreshedAnnotations,
+      selectedAnnotationId: annotationId, // Explicitly maintain selection
+    );
   }
 
   void _refreshAnnotations() {
@@ -550,6 +578,442 @@ class PdfEditorNotifier extends StateNotifier<PdfEditorState> {
     state = state.copyWith(selectedAnnotationId: id);
   }
 
+  void startTextPlacement(
+    String text,
+    double fontSize,
+    Color color,
+    FontWeight fontWeight,
+  ) {
+    if (state.currentPageImage == null) return;
+
+    final pageWidth = (state.currentPageImage!.width ?? 0).toDouble();
+    final pageHeight = (state.currentPageImage!.height ?? 0).toDouble();
+
+    // Place text in center of page
+    final centerX = pageWidth * 0.4;
+    final centerY = pageHeight * 0.4;
+
+    final id = _generateId();
+    final annotation = TextAnnotation(
+      id: id,
+      pageNumber: state.currentPageNumber,
+      createdAt: DateTime.now(),
+      text: text,
+      position: Offset(centerX, centerY),
+      color: color,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+    );
+
+    _annotationService.addAnnotation(state.currentPageNumber, annotation);
+    _refreshAnnotations();
+
+    state = state.copyWith(
+      selectedAnnotationId: id,
+      selectedTool: AnnotationTool.none,
+    );
+  }
+
+  void updateTextAnnotation(
+    String annotationId,
+    String text,
+    double fontSize,
+    Color color,
+    FontWeight fontWeight,
+  ) {
+    final annotations = _annotationService.getAnnotationsForPage(state.currentPageNumber);
+    final annotation = annotations.where((a) => a.id == annotationId).firstOrNull;
+
+    if (annotation is! TextAnnotation) return;
+
+    _annotationService.removeAnnotation(state.currentPageNumber, annotationId);
+
+    final updatedAnnotation = TextAnnotation(
+      id: annotation.id,
+      pageNumber: annotation.pageNumber,
+      createdAt: annotation.createdAt,
+      text: text,
+      position: annotation.position,
+      color: color,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      fontFamily: annotation.fontFamily,
+    );
+
+    _annotationService.addAnnotation(state.currentPageNumber, updatedAnnotation);
+
+    // Refresh annotations while maintaining selection
+    final refreshedAnnotations = _annotationService.getAnnotationsForPage(state.currentPageNumber);
+    state = state.copyWith(
+      currentPageAnnotations: refreshedAnnotations,
+      selectedAnnotationId: annotationId, // Explicitly maintain selection
+    );
+  }
+
+  void updateHighlightAnnotation(
+    String annotationId,
+    Color color,
+    double opacity,
+  ) {
+    final annotations = _annotationService.getAnnotationsForPage(state.currentPageNumber);
+    final annotation = annotations.where((a) => a.id == annotationId).firstOrNull;
+
+    if (annotation is! HighlightAnnotation) return;
+
+    _annotationService.removeAnnotation(state.currentPageNumber, annotationId);
+
+    final updatedAnnotation = HighlightAnnotation(
+      id: annotation.id,
+      pageNumber: annotation.pageNumber,
+      createdAt: annotation.createdAt,
+      bounds: annotation.bounds,
+      color: color,
+      opacity: opacity,
+    );
+
+    _annotationService.addAnnotation(state.currentPageNumber, updatedAnnotation);
+
+    // Refresh annotations while maintaining selection
+    final refreshedAnnotations = _annotationService.getAnnotationsForPage(state.currentPageNumber);
+    state = state.copyWith(
+      currentPageAnnotations: refreshedAnnotations,
+      selectedAnnotationId: annotationId, // Explicitly maintain selection
+    );
+  }
+
+  void copyAnnotation() {
+    final selectedId = state.selectedAnnotationId;
+    if (selectedId == null) return;
+
+    final annotations = _annotationService.getAnnotationsForPage(state.currentPageNumber);
+    final annotation = annotations.where((a) => a.id == selectedId).firstOrNull;
+
+    if (annotation != null) {
+      state = state.copyWith(copiedAnnotation: annotation);
+    }
+  }
+
+  Future<void> pasteAnnotation() async {
+    final copiedAnnotation = state.copiedAnnotation;
+    if (copiedAnnotation == null) return;
+
+    final id = _generateId();
+    final offsetX = 20.0;
+    final offsetY = 20.0;
+
+    AnnotationBase newAnnotation;
+
+    if (copiedAnnotation is TextAnnotation) {
+      newAnnotation = TextAnnotation(
+        id: id,
+        pageNumber: state.currentPageNumber,
+        createdAt: DateTime.now(),
+        text: copiedAnnotation.text,
+        position: Offset(
+          copiedAnnotation.position.dx + offsetX,
+          copiedAnnotation.position.dy + offsetY,
+        ),
+        color: copiedAnnotation.color,
+        fontSize: copiedAnnotation.fontSize,
+        fontWeight: copiedAnnotation.fontWeight,
+        fontFamily: copiedAnnotation.fontFamily,
+      );
+    } else if (copiedAnnotation is HighlightAnnotation) {
+      newAnnotation = HighlightAnnotation(
+        id: id,
+        pageNumber: state.currentPageNumber,
+        createdAt: DateTime.now(),
+        bounds: Rect.fromLTWH(
+          copiedAnnotation.bounds.left + offsetX,
+          copiedAnnotation.bounds.top + offsetY,
+          copiedAnnotation.bounds.width,
+          copiedAnnotation.bounds.height,
+        ),
+        color: copiedAnnotation.color,
+        opacity: copiedAnnotation.opacity,
+      );
+    } else if (copiedAnnotation is InkAnnotation) {
+      final translatedPoints = copiedAnnotation.points
+          .map((point) => Offset(point.dx + offsetX, point.dy + offsetY))
+          .toList();
+      newAnnotation = InkAnnotation(
+        id: id,
+        pageNumber: state.currentPageNumber,
+        createdAt: DateTime.now(),
+        points: translatedPoints,
+        color: copiedAnnotation.color,
+        thickness: copiedAnnotation.thickness,
+        opacity: copiedAnnotation.opacity,
+      );
+    } else if (copiedAnnotation is SignatureAnnotation) {
+      newAnnotation = SignatureAnnotation(
+        id: id,
+        pageNumber: state.currentPageNumber,
+        createdAt: DateTime.now(),
+        imageData: copiedAnnotation.imageData,
+        bounds: Rect.fromLTWH(
+          copiedAnnotation.bounds.left + offsetX,
+          copiedAnnotation.bounds.top + offsetY,
+          copiedAnnotation.bounds.width,
+          copiedAnnotation.bounds.height,
+        ),
+      );
+      await _loadImageForAnnotation(id, copiedAnnotation.imageData);
+    } else if (copiedAnnotation is StampAnnotation) {
+      newAnnotation = StampAnnotation(
+        id: id,
+        pageNumber: state.currentPageNumber,
+        createdAt: DateTime.now(),
+        imageData: copiedAnnotation.imageData,
+        bounds: Rect.fromLTWH(
+          copiedAnnotation.bounds.left + offsetX,
+          copiedAnnotation.bounds.top + offsetY,
+          copiedAnnotation.bounds.width,
+          copiedAnnotation.bounds.height,
+        ),
+        opacity: copiedAnnotation.opacity,
+      );
+      await _loadImageForAnnotation(id, copiedAnnotation.imageData);
+    } else if (copiedAnnotation is ShapeAnnotation) {
+      newAnnotation = ShapeAnnotation(
+        id: id,
+        pageNumber: state.currentPageNumber,
+        createdAt: DateTime.now(),
+        shapeType: copiedAnnotation.shapeType,
+        bounds: Rect.fromLTWH(
+          copiedAnnotation.bounds.left + offsetX,
+          copiedAnnotation.bounds.top + offsetY,
+          copiedAnnotation.bounds.width,
+          copiedAnnotation.bounds.height,
+        ),
+        color: copiedAnnotation.color,
+        strokeWidth: copiedAnnotation.strokeWidth,
+        opacity: copiedAnnotation.opacity,
+        filled: copiedAnnotation.filled,
+      );
+    } else if (copiedAnnotation is CommentAnnotation) {
+      newAnnotation = CommentAnnotation(
+        id: id,
+        pageNumber: state.currentPageNumber,
+        createdAt: DateTime.now(),
+        text: copiedAnnotation.text,
+        position: Offset(
+          copiedAnnotation.position.dx + offsetX,
+          copiedAnnotation.position.dy + offsetY,
+        ),
+        color: copiedAnnotation.color,
+      );
+    } else {
+      return;
+    }
+
+    _annotationService.addAnnotation(state.currentPageNumber, newAnnotation);
+    _refreshAnnotations();
+
+    state = state.copyWith(selectedAnnotationId: id);
+  }
+
+  Future<void> deletePage(int pageNumber) async {
+    try {
+      final filePath = state.filePath;
+      if (filePath == null || state.document == null) return;
+
+      // Can't delete if only one page left
+      if (state.totalPages <= 1) {
+        state = state.copyWith(
+          error: 'Cannot delete the last page',
+        );
+        return;
+      }
+
+      state = state.copyWith(isProcessing: true, error: null);
+
+      // Delete the page using manipulation service
+      final newPdfBytes = await _manipulationService.deletePages(
+        filePath,
+        [pageNumber],
+      );
+
+      // Save to temporary file
+      final tempDir = Directory.systemTemp;
+      final tempFile = File('${tempDir.path}/temp_edited_${DateTime.now().millisecondsSinceEpoch}.pdf');
+      await tempFile.writeAsBytes(newPdfBytes);
+
+      // Close current document
+      await state.document?.close();
+
+      // Clear annotations for all pages
+      _annotationService.clearAllAnnotations();
+
+      // Reload the PDF from temp file
+      final document = await pdfx.PdfDocument.openData(newPdfBytes);
+
+      state = state.copyWith(
+        filePath: tempFile.path,
+        document: document,
+        totalPages: document.pagesCount,
+        currentPageNumber: pageNumber > document.pagesCount ? document.pagesCount : pageNumber,
+      );
+
+      await _loadPage(state.currentPageNumber);
+
+      state = state.copyWith(
+        isProcessing: false,
+        successMessage: 'Page deleted successfully',
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isProcessing: false,
+        error: 'Failed to delete page: $e',
+      );
+    }
+  }
+
+  Future<void> duplicatePage(int pageNumber) async {
+    try {
+      final filePath = state.filePath;
+      if (filePath == null || state.document == null) return;
+
+      state = state.copyWith(isProcessing: true, error: null);
+
+      // Duplicate the page using manipulation service
+      final newPdfBytes = await _manipulationService.duplicatePage(
+        filePath,
+        pageNumber,
+      );
+
+      // Save to temporary file
+      final tempDir = Directory.systemTemp;
+      final tempFile = File('${tempDir.path}/temp_edited_${DateTime.now().millisecondsSinceEpoch}.pdf');
+      await tempFile.writeAsBytes(newPdfBytes);
+
+      // Close current document
+      await state.document?.close();
+
+      // Clear annotations for all pages
+      _annotationService.clearAllAnnotations();
+
+      // Reload the PDF from temp file
+      final document = await pdfx.PdfDocument.openData(newPdfBytes);
+
+      state = state.copyWith(
+        filePath: tempFile.path,
+        document: document,
+        totalPages: document.pagesCount,
+        currentPageNumber: pageNumber + 1, // Go to the duplicated page
+      );
+
+      await _loadPage(state.currentPageNumber);
+
+      state = state.copyWith(
+        isProcessing: false,
+        successMessage: 'Page duplicated successfully',
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isProcessing: false,
+        error: 'Failed to duplicate page: $e',
+      );
+    }
+  }
+
+  Future<void> rotatePage(int pageNumber, int degrees) async {
+    try {
+      final filePath = state.filePath;
+      if (filePath == null || state.document == null) return;
+
+      state = state.copyWith(isProcessing: true, error: null);
+
+      // Rotate the page using manipulation service
+      final newPdfBytes = await _manipulationService.rotateSinglePage(
+        filePath,
+        pageNumber,
+        degrees,
+      );
+
+      // Save to temporary file
+      final tempDir = Directory.systemTemp;
+      final tempFile = File('${tempDir.path}/temp_edited_${DateTime.now().millisecondsSinceEpoch}.pdf');
+      await tempFile.writeAsBytes(newPdfBytes);
+
+      // Close current document
+      await state.document?.close();
+
+      // Clear annotations for all pages
+      _annotationService.clearAllAnnotations();
+
+      // Reload the PDF from temp file
+      final document = await pdfx.PdfDocument.openData(newPdfBytes);
+
+      state = state.copyWith(
+        filePath: tempFile.path,
+        document: document,
+        totalPages: document.pagesCount,
+        currentPageNumber: pageNumber,
+      );
+
+      await _loadPage(state.currentPageNumber);
+
+      state = state.copyWith(
+        isProcessing: false,
+        successMessage: 'Page rotated successfully',
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isProcessing: false,
+        error: 'Failed to rotate page: $e',
+      );
+    }
+  }
+
+  Future<void> reorderPages(List<int> newOrder) async {
+    try {
+      final filePath = state.filePath;
+      if (filePath == null || state.document == null) return;
+
+      state = state.copyWith(isProcessing: true, error: null);
+
+      // Reorder pages using manipulation service
+      final newPdfBytes = await _manipulationService.reorderPages(
+        filePath,
+        newOrder,
+      );
+
+      // Save to temporary file
+      final tempDir = Directory.systemTemp;
+      final tempFile = File('${tempDir.path}/temp_edited_${DateTime.now().millisecondsSinceEpoch}.pdf');
+      await tempFile.writeAsBytes(newPdfBytes);
+
+      // Close current document
+      await state.document?.close();
+
+      // Clear annotations for all pages
+      _annotationService.clearAllAnnotations();
+
+      // Reload the PDF from temp file
+      final document = await pdfx.PdfDocument.openData(newPdfBytes);
+
+      state = state.copyWith(
+        filePath: tempFile.path,
+        document: document,
+        totalPages: document.pagesCount,
+        currentPageNumber: 1,
+      );
+
+      await _loadPage(state.currentPageNumber);
+
+      state = state.copyWith(
+        isProcessing: false,
+        successMessage: 'Pages reordered successfully',
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isProcessing: false,
+        error: 'Failed to reorder pages: $e',
+      );
+    }
+  }
+
   Future<void> savePdf() async {
     try {
       final filePath = state.filePath;
@@ -612,6 +1076,7 @@ final pdfEditorProvider =
   return PdfEditorNotifier(
     annotationService: CanvasAnnotationService(),
     exportService: PdfExportService(),
+    manipulationService: PdfManipulationService(),
     fileService: ref.watch(fileServiceProvider),
   );
 });
