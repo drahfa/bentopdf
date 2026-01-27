@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SitiPDF - Your Friendly PDF Editor for macOS</title>
+    <meta name="description" content="SitiPDF is a powerful, native macOS PDF editor. Annotate, merge, split, organize PDFs with ease. 100% private - all processing happens on your Mac.">
+    <meta name="keywords" content="PDF editor, macOS PDF, merge PDF, split PDF, annotate PDF, PDF tools, Mac app">
+    <link rel="canonical" href="https://sitipdf.com">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="SitiPDF - Your Friendly PDF Editor">
+    <meta property="og:description" content="Beautiful, native macOS PDF editor. Annotate, merge, split, and organize PDFs. 100% private.">
+    <meta property="og:image" content="https://sitipdf.com/images/og-image.png">
+    <meta property="og:url" content="https://sitipdf.com">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SitiPDF - Your Friendly PDF Editor">
+    <meta name="twitter:description" content="Beautiful, native macOS PDF editor. 100% private.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #0b1020;
+            --bg-card: rgba(26, 31, 53, 0.8);
+            --accent: #7c5cff;
+            --accent-light: #9d85ff;
+            --accent2: #22c55e;
+            --pink: #ec4899;
+            --pink-light: #f472b6;
+            --text: #e8ecff;
+            --text-muted: #a7b2de;
+            --border: rgba(255, 255, 255, 0.1);
+            --radius: 18px;
+            --radius-sm: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Gradient Background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(124, 92, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(34, 197, 94, 0.05) 0%, transparent 70%),
+                linear-gradient(180deg, #0b1020 0%, #0f172a 100%);
+            z-index: -1;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            transition: background 0.3s ease;
+        }
+
+        nav.scrolled {
+            background: rgba(11, 16, 32, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo img {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-sm);
+        }
+
+        .logo span {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--pink) 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(124, 92, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(124, 92, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(26, 31, 53, 1);
+            border-color: var(--accent);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 8rem 2rem 4rem;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--text) 0%, var(--pink-light) 50%, var(--accent-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-content p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            max-width: 500px;
+        }
+
+        .hero-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .badge svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .badge.privacy svg {
+            color: var(--accent2);
+        }
+
+        .badge.native svg {
+            color: var(--accent);
+        }
+
+        .badge.simple svg {
+            color: var(--pink);
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-image {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .hero-image img {
+            max-width: 100%;
+            width: 450px;
+            height: auto;
+            filter: drop-shadow(0 30px 60px rgba(124, 92, 255, 0.3));
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .hero-glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        /* Hooks Section */
+        .hooks {
+            padding: 6rem 2rem;
+        }
+
+        .hooks-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            font-size: 1.125rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .hooks-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .hook-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .hook-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent);
+            box-shadow: 0 20px 40px rgba(124, 92, 255, 0.2);
+        }
+
+        .hook-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .hook-icon.purple { background: linear-gradient(135deg, rgba(124, 92, 255, 0.2), rgba(124, 92, 255, 0.1)); }
+        .hook-icon.pink { background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(236, 72, 153, 0.1)); }
+        .hook-icon.green { background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1)); }
+
+        .hook-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .hook-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 2rem;
+            background: linear-gradient(180deg, transparent 0%, rgba(124, 92, 255, 0.03) 50%, transparent 100%);
+        }
+
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--pink);
+            transform: scale(1.02);
+        }
+
+        .feature-card .icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Testimonial/Social Proof */
+        .social-proof {
+            padding: 6rem 2rem;
+        }
+
+        .social-proof-container {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .quote {
+            font-size: 1.75rem;
+            font-weight: 500;
+            font-style: italic;
+            margin-bottom: 2rem;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .quote::before {
+            content: '"';
+            color: var(--accent);
+            font-size: 3rem;
+            line-height: 0;
+            vertical-align: -0.4em;
+            margin-right: 0.1em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+            margin-top: 3rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Pricing */
+        .pricing {
+            padding: 6rem 2rem;
+        }
+
+        .pricing-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background: var(--bg-card);
+            border: 2px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pricing-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--pink));
+        }
+
+        .pricing-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent), var(--pink));
+            color: white;
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .price {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 1rem 0;
+        }
+
+        .price span {
+            font-size: 1.25rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .price-note {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-features svg {
+            width: 20px;
+            height: 20px;
+            color: var(--accent2);
+            flex-shrink: 0;
+        }
+
+        /* Support Section */
+        .support {
+            padding: 6rem 2rem;
+            background: linear-gradient(180deg, transparent 0%, rgba(34, 197, 94, 0.03) 50%, transparent 100%);
+        }
+
+        .support-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .support-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        .support-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+        }
+
+        .support-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .support-card h3 span {
+            font-size: 1.5rem;
+        }
+
+        .support-card p {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .support-card ul {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .support-card ul li {
+            padding: 0.5rem 0;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .support-card ul li::before {
+            content: '→';
+            color: var(--accent);
+        }
+
+        /* Contact Section */
+        .contact {
+            padding: 6rem 2rem;
+        }
+
+        .contact-container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .contact-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 3rem;
+        }
+
+        .contact-card h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-card > p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 1rem;
+            background: rgba(124, 92, 255, 0.1);
+            border-radius: var(--radius-sm);
+        }
+
+        .contact-item span {
+            font-size: 1.25rem;
+        }
+
+        .contact-item a {
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .contact-item a:hover {
+            color: var(--accent);
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--text);
+        }
+
+        .copyright {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 968px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-content p {
+                margin: 0 auto 2rem;
+            }
+
+            .hero-badges {
+                justify-content: center;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .hero-image {
+                order: -1;
+            }
+
+            .hero-image img {
+                width: 300px;
+            }
+
+            .hooks-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .support-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-container {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        /* App Store Badge */
+        .app-store-badge {
+            height: 50px;
+            transition: transform 0.3s ease;
+        }
+
+        .app-store-badge:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <img src="images/icon.png" alt="SitiPDF">
+                <span>SitiPDF</span>
+            </a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#support">Support</a>
+                <a href="#contact">Contact</a>
+                <a href="https://apps.apple.com/app/sitipdf" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                    Download
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Your Friendly PDF Editor for Mac</h1>
+                <p>Meet Siti, your new PDF companion. Annotate, merge, split, and organize PDFs with a smile. Beautiful, powerful, and 100% private.</p>
+
+                <div class="hero-badges">
+                    <span class="badge privacy">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                        100% Private
+                    </span>
+                    <span class="badge native">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        Native macOS
+                    </span>
+                    <span class="badge simple">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                        Simple & Fun
+                    </span>
+                </div>
+
+                <div class="hero-buttons">
+                    <a href="https://apps.apple.com/app/sitipdf" class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                        Download on App Store
+                    </a>
+                    <a href="#features" class="btn btn-secondary">
+                        See Features
+                    </a>
+                </div>
+            </div>
+
+            <div class="hero-image">
+                <div class="hero-glow"></div>
+                <img src="images/siti-hero.png" alt="SitiPDF - Your Friendly PDF Editor">
+            </div>
+        </div>
+    </section>
+
+    <!-- Why SitiPDF - Hooks -->
+    <section class="hooks" id="why">
+        <div class="hooks-container">
+            <div class="section-header">
+                <h2>Why Choose SitiPDF?</h2>
+                <p>We built SitiPDF because we believe PDF editing should be easy, private, and delightful.</p>
+            </div>
+
+            <div class="hooks-grid">
+                <div class="hook-card">
+                    <div class="hook-icon purple">🔒</div>
+                    <h3>Your Files Stay on Your Mac</h3>
+                    <p>Unlike online PDF tools that upload your documents to unknown servers, SitiPDF processes everything locally. Your contracts, tax documents, and personal files never leave your computer. Zero data collection. Zero tracking.</p>
+                </div>
+
+                <div class="hook-card">
+                    <div class="hook-icon pink">⚡</div>
+                    <h3>Lightning Fast, No Internet Required</h3>
+                    <p>No waiting for uploads. No spinning wheels. SitiPDF works instantly because it's a real native app, not a web wrapper. Edit 100-page PDFs as smoothly as a 1-page document. Works offline, anytime.</p>
+                </div>
+
+                <div class="hook-card">
+                    <div class="hook-icon green">💰</div>
+                    <h3>Pay Once, Own Forever</h3>
+                    <p>Tired of subscriptions? So are we. SitiPDF is a one-time purchase with free updates. No monthly fees, no annual renewals, no "your trial has expired" pop-ups. Buy it, own it, love it.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="features" id="features">
+        <div class="features-container">
+            <div class="section-header">
+                <h2>Everything You Need for PDFs</h2>
+                <p>10+ professional tools, beautifully designed for your everyday PDF tasks.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="icon">✏️</div>
+                    <h4>Annotate & Edit</h4>
+                    <p>Highlights, drawings, shapes, stamps & signatures</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">📑</div>
+                    <h4>Merge PDFs</h4>
+                    <p>Combine multiple files with drag & drop</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">✂️</div>
+                    <h4>Split PDF</h4>
+                    <p>Extract page ranges to new files</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">📄</div>
+                    <h4>Extract Pages</h4>
+                    <p>Pick specific pages with visual thumbnails</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">🗂️</div>
+                    <h4>Organize Pages</h4>
+                    <p>Reorder, duplicate, delete with drag & drop</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">🔄</div>
+                    <h4>Rotate Pages</h4>
+                    <p>Fix orientation instantly</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">🖼️</div>
+                    <h4>PDF to Images</h4>
+                    <p>Export to PNG or JPEG with quality control</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">📸</div>
+                    <h4>Images to PDF</h4>
+                    <p>Create PDFs from photos and scans</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof -->
+    <section class="social-proof">
+        <div class="social-proof-container">
+            <p class="quote">Finally, a PDF editor that respects my privacy and doesn't try to nickel-and-dime me with subscriptions. SitiPDF just works.</p>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">10+</div>
+                    <div class="stat-label">PDF Tools</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">10</div>
+                    <div class="stat-label">Languages</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Data Collected</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing" id="pricing">
+        <div class="pricing-container">
+            <div class="section-header">
+                <h2>Simple, Honest Pricing</h2>
+                <p>No subscriptions. No hidden fees. Just great software.</p>
+            </div>
+
+            <div class="pricing-card">
+                <span class="pricing-badge">Best Value</span>
+                <h3>SitiPDF for Mac</h3>
+                <div class="price">$9.99 <span>one-time</span></div>
+                <p class="price-note">Free updates included forever</p>
+
+                <ul class="pricing-features">
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        All 10+ PDF tools included
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        Native Apple Silicon & Intel support
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        100% offline & private
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        10 languages supported
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        Free lifetime updates
+                    </li>
+                </ul>
+
+                <a href="https://apps.apple.com/app/sitipdf" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                    Get SitiPDF on App Store
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Support Section -->
+    <section class="support" id="support">
+        <div class="support-container">
+            <div class="section-header">
+                <h2>We're Here to Help</h2>
+                <p>Got questions? We've got answers. Our support team is ready to assist you.</p>
+            </div>
+
+            <div class="support-grid">
+                <div class="support-card">
+                    <h3><span>📚</span> Getting Started</h3>
+                    <p>New to SitiPDF? Here's how to make the most of your new PDF editor:</p>
+                    <ul>
+                        <li>Download from the Mac App Store</li>
+                        <li>Open any PDF by dragging it into the app</li>
+                        <li>Choose a tool from the home screen</li>
+                        <li>Save your edited PDF anywhere</li>
+                    </ul>
+                </div>
+
+                <div class="support-card">
+                    <h3><span>❓</span> FAQ</h3>
+                    <p>Common questions from our users:</p>
+                    <ul>
+                        <li>Does SitiPDF work offline? <strong>Yes, 100%</strong></li>
+                        <li>Is my data sent anywhere? <strong>No, never</strong></li>
+                        <li>macOS version required? <strong>macOS 12+</strong></li>
+                        <li>Apple Silicon supported? <strong>Yes, native</strong></li>
+                    </ul>
+                </div>
+
+                <div class="support-card">
+                    <h3><span>🐛</span> Report an Issue</h3>
+                    <p>Found a bug or having trouble? Let us know and we'll fix it quickly.</p>
+                    <ul>
+                        <li>Describe what happened</li>
+                        <li>Include your macOS version</li>
+                        <li>Attach screenshots if helpful</li>
+                        <li>Email us at the address below</li>
+                    </ul>
+                </div>
+
+                <div class="support-card">
+                    <h3><span>💡</span> Feature Requests</h3>
+                    <p>Have an idea that would make SitiPDF even better?</p>
+                    <ul>
+                        <li>We read every suggestion</li>
+                        <li>Popular requests get prioritized</li>
+                        <li>You might see it in the next update</li>
+                        <li>Send ideas to our email</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="contact-container">
+            <div class="contact-card">
+                <h2>Get in Touch</h2>
+                <p>Questions, feedback, or just want to say hi? We'd love to hear from you.</p>
+
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <span>📧</span>
+                        <a href="mailto:faisal@vsg-labs.com">faisal@vsg-labs.com</a>
+                    </div>
+                    <div class="contact-item">
+                        <span>🏢</span>
+                        <span>VSG Labs</span>
+                    </div>
+                </div>
+
+                <p style="margin-top: 2rem; color: var(--text-muted); font-size: 0.9rem;">
+                    We typically respond within 24-48 hours.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-links">
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#support">Support</a>
+                <a href="#contact">Contact</a>
+                <a href="privacy.html">Privacy Policy</a>
+            </div>
+            <p class="copyright">© 2026 VSG Labs. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
