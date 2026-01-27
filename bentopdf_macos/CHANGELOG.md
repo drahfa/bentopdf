@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-01-27
+
+### Build 7 - App Store Submission Fix
+
+#### Fixed
+- **ITMS-90291 Framework Structure** - Corrected objective_c framework symlink structure
+  - Resources symlink now correctly points to `Versions/Current/Resources` (was `Versions/A/Resources`)
+  - Updated fix_frameworks.sh to verify and fix existing framework symlinks
+  - All frameworks now comply with Apple's framework bundle structure requirements
+  - Resolves App Store Connect rejection for malformed framework bundles
+
+#### Technical
+- Enhanced fix_frameworks.sh script to handle frameworks with existing Versions directories
+- Script now removes incorrect symlinks and recreates them with proper paths
+- Verified framework structure meets Apple's validation requirements
+
+### Build 6 - Extract Pages Thumbnails (Rejected by App Store)
+
 ## [1.4.1] - 2026-01-26
 
 ### Added
