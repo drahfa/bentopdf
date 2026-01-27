@@ -49,18 +49,11 @@ def add_build_phase(project_path):
     replacement = r'\1' + shell_script_section
     content = re.sub(pattern, replacement, content)
 
-    # Find the Runner target's buildPhases array
-    # Pattern to match: buildPhases = ( ... );
-    runner_pattern = r'(33CC10E92044A3C60003C045 /\* Runner \*/ = \{[^}]*?buildPhases = \(\n)((?:\s+[A-F0-9]+ /\*[^*]*\*/,\n)*)'
-
-    def add_to_build_phases(match):
-        prefix = match.group(1)
-        phases = match.group(2)
-        # Add our new phase at the end (before the closing parenthesis)
-        new_phase = f'\t\t\t\t{script_phase_id} /* Fix Framework Structures */,\n'
-        return prefix + phases + new_phase
-
-    content = re.sub(runner_pattern, add_to_build_phases, content)
+    # Find the Runner target's buildPhases array and add our phase
+    # Look for the Bundle Framework phase and add ours after it
+    bundle_framework_pattern = r'(33CC110E2044A8840003C045 /\* Bundle Framework \*/,\n)'
+    replacement_phase = r'\1\t\t\t\t' + script_phase_id + r' /* Fix Framework Structures */,\n'
+    content = re.sub(bundle_framework_pattern, replacement_phase, content)
 
     # Write back
     with open(project_path, 'w') as f:
