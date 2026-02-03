@@ -98,6 +98,37 @@
     "name": "Balik Warna",
     "subtitle": "Buat versi \"mode gelap\" dari PDF Anda."
   },
+  "scannerEffect": {
+    "name": "Efek Pemindai",
+    "subtitle": "Buat PDF Anda terlihat seperti dokumen yang dipindai.",
+    "scanSettings": "Pengaturan Pemindaian",
+    "colorspace": "Ruang Warna",
+    "gray": "Skala Abu-abu",
+    "border": "Batas",
+    "rotate": "Putar",
+    "rotateVariance": "Variasi Putaran",
+    "brightness": "Kecerahan",
+    "contrast": "Kontras",
+    "blur": "Blur",
+    "noise": "Noise",
+    "yellowish": "Kekuningan",
+    "resolution": "Resolusi",
+    "processButton": "Terapkan Efek Pemindai"
+  },
+  "adjustColors": {
+    "name": "Sesuaikan Warna",
+    "subtitle": "Sesuaikan kecerahan, kontras, saturasi dan lainnya pada PDF Anda.",
+    "colorSettings": "Pengaturan Warna",
+    "brightness": "Kecerahan",
+    "contrast": "Kontras",
+    "saturation": "Saturasi",
+    "hueShift": "Pergeseran Rona",
+    "temperature": "Suhu",
+    "tint": "Pewarnaan",
+    "gamma": "Gamma",
+    "sepia": "Sepia",
+    "processButton": "Terapkan Penyesuaian Warna"
+  },
   "backgroundColor": {
     "name": "Warna Latar Belakang",
     "subtitle": "Ubah warna latar belakang PDF Anda."
@@ -529,5 +560,33 @@
   "deskewPdf": {
     "name": "Luruskan PDF",
     "subtitle": "Otomatis meluruskan halaman hasil pindai yang miring menggunakan OpenCV."
+  },
+  "pdfToWord": {
+    "name": "PDF ke Word",
+    "subtitle": "Konversi file PDF ke dokumen Word yang dapat diedit."
+  },
+  "extractImages": {
+    "name": "Ekstrak Gambar",
+    "subtitle": "Ekstrak semua gambar yang tertanam dari file PDF Anda."
+  },
+  "pdfToMarkdown": {
+    "name": "PDF ke Markdown",
+    "subtitle": "Konversi teks dan tabel PDF ke format Markdown."
+  },
+  "preparePdfForAi": {
+    "name": "Siapkan PDF untuk AI",
+    "subtitle": "Ekstrak konten PDF sebagai JSON LlamaIndex untuk pipeline RAG/LLM."
+  },
+  "pdfOcg": {
+    "name": "Lapisan PDF (OCG)",
+    "subtitle": "Lihat, beralih, tambah, dan hapus lapisan OCG di PDF Anda."
+  },
+  "pdfToPdfa": {
+    "name": "PDF ke PDF/A",
+    "subtitle": "Konversi PDF ke PDF/A untuk pengarsipan jangka panjang."
+  },
+  "rasterizePdf": {
+    "name": "Rasterisasi PDF",
+    "subtitle": "Konversi PDF ke PDF berbasis gambar. Ratakan lapisan dan hapus teks yang dapat dipilih."
   }
 }

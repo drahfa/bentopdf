@@ -1,6 +1,7 @@
 import { defineConfig, Plugin } from 'vitest/config';
 import type { IncomingMessage, ServerResponse } from 'http';
 import type { Connect } from 'vite';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 import tailwindcss from '@tailwindcss/vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
@@ -13,6 +14,7 @@ import type { OutputBundle } from 'rollup';
 
 const SUPPORTED_LANGUAGES = [
   'en',
+  'be',
   'de',
   'es',
   'zh',
@@ -23,6 +25,7 @@ const SUPPORTED_LANGUAGES = [
   'tr',
   'fr',
   'pt',
+  'nl',
 ] as const;
 const LANG_REGEX = new RegExp(
   `^/(${SUPPORTED_LANGUAGES.join('|')})(?:/(.*))?$`
@@ -275,34 +278,6 @@ export default defineConfig(() => {
 
   const staticCopyTargets = [
     {
-      src: 'node_modules/@bentopdf/pymupdf-wasm/assets/*.wasm',
-      dest: 'pymupdf-wasm',
-    },
-    {
-      src: 'node_modules/@bentopdf/pymupdf-wasm/assets/*.js',
-      dest: 'pymupdf-wasm',
-    },
-    {
-      src: 'node_modules/@bentopdf/pymupdf-wasm/assets/*.whl',
-      dest: 'pymupdf-wasm',
-    },
-    {
-      src: 'node_modules/@bentopdf/pymupdf-wasm/assets/*.zip',
-      dest: 'pymupdf-wasm',
-    },
-    {
-      src: 'node_modules/@bentopdf/pymupdf-wasm/assets/*.json',
-      dest: 'pymupdf-wasm',
-    },
-    {
-      src: 'node_modules/@bentopdf/gs-wasm/assets/*.wasm',
-      dest: 'ghostscript-wasm',
-    },
-    {
-      src: 'node_modules/@bentopdf/gs-wasm/assets/*.js',
-      dest: 'ghostscript-wasm',
-    },
-    {
       src: 'node_modules/embedpdf-snippet/dist/pdfium.wasm',
       dest: 'embedpdf',
     },
@@ -311,6 +286,7 @@ export default defineConfig(() => {
   return {
     base: (process.env.BASE_URL || '/').replace(/\/?$/, '/'),
     plugins: [
+      // basicSsl(),
       handlebars({
         partialDirectory: resolve(__dirname, 'src/partials'),
         context: {
@@ -428,6 +404,8 @@ export default defineConfig(() => {
           'add-watermark': resolve(__dirname, 'src/pages/add-watermark.html'),
           'header-footer': resolve(__dirname, 'src/pages/header-footer.html'),
           'invert-colors': resolve(__dirname, 'src/pages/invert-colors.html'),
+          'scanner-effect': resolve(__dirname, 'src/pages/scanner-effect.html'),
+          'adjust-colors': resolve(__dirname, 'src/pages/adjust-colors.html'),
           'background-color': resolve(
             __dirname,
             'src/pages/background-color.html'
@@ -574,6 +552,7 @@ export default defineConfig(() => {
             'src/pages/font-to-outline.html'
           ),
           'deskew-pdf': resolve(__dirname, 'src/pages/deskew-pdf.html'),
+          'wasm-settings': resolve(__dirname, 'src/pages/wasm-settings.html'),
         },
       },
     },

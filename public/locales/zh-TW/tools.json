@@ -76,6 +76,37 @@
     "name": "反轉顏色",
     "subtitle": "為你的 PDF 建立深色版本。"
   },
+  "scannerEffect": {
+    "name": "掃描效果",
+    "subtitle": "讓你的 PDF 看起來像掃描文件。",
+    "scanSettings": "掃描設定",
+    "colorspace": "色彩空間",
+    "gray": "灰階",
+    "border": "邊框",
+    "rotate": "旋轉",
+    "rotateVariance": "旋轉變異",
+    "brightness": "亮度",
+    "contrast": "對比度",
+    "blur": "模糊",
+    "noise": "雜訊",
+    "yellowish": "泛黃",
+    "resolution": "解析度",
+    "processButton": "套用掃描效果"
+  },
+  "adjustColors": {
+    "name": "調整顏色",
+    "subtitle": "微調 PDF 的亮度、對比度、飽和度等。",
+    "colorSettings": "顏色設定",
+    "brightness": "亮度",
+    "contrast": "對比度",
+    "saturation": "飽和度",
+    "hueShift": "色相偏移",
+    "temperature": "色溫",
+    "tint": "色調",
+    "gamma": "Gamma",
+    "sepia": "復古色",
+    "processButton": "套用顏色調整"
+  },
   "backgroundColor": {
     "name": "背景顏色",
     "subtitle": "更改你的 PDF 的背景顏色。"
@@ -507,5 +538,33 @@
     "name": "Validate PDF Signature",
     "pageTitle": "Validate PDF Signature - Verify Digital Signatures | BentoPDF",
     "subtitle": "Verify digital signatures in your PDF files. Check certificate validity, view signer details, and confirm document integrity. All processing happens in your browser."
+  },
+  "pdfToWord": {
+    "name": "PDF 轉 Word",
+    "subtitle": "將 PDF 檔案轉換為可編輯的 Word 文件。"
+  },
+  "extractImages": {
+    "name": "擷取圖片",
+    "subtitle": "從 PDF 檔案中擷取所有嵌入的圖片。"
+  },
+  "pdfToMarkdown": {
+    "name": "PDF 轉 Markdown",
+    "subtitle": "將 PDF 文字和表格轉換為 Markdown 格式。"
+  },
+  "preparePdfForAi": {
+    "name": "為 AI 準備 PDF",
+    "subtitle": "將 PDF 內容擷取為 LlamaIndex JSON，用於 RAG/LLM 管線。"
+  },
+  "pdfOcg": {
+    "name": "PDF 圖層 (OCG)",
+    "subtitle": "檢視、切換、新增和刪除 PDF 中的 OCG 圖層。"
+  },
+  "pdfToPdfa": {
+    "name": "PDF 轉 PDF/A",
+    "subtitle": "將 PDF 轉換為 PDF/A 格式以進行長期歸檔。"
+  },
+  "rasterizePdf": {
+    "name": "柵格化 PDF",
+    "subtitle": "將 PDF 轉換為基於影像的 PDF。展平圖層並移除可選取的文字。"
   }
 }

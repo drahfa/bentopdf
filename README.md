@@ -1,12 +1,53 @@
 <p align="center"><img src="public/images/favicon-no-bg.svg" width="80"></p>
 <h1 align="center">BentoPDF</h1>
+<p align="center">
+  <a href="https://www.digitalocean.com/?refcode=d93c189ef6d0&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge">
+    <img src="https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%203.svg" alt="DigitalOcean Referral Badge">
+  </a>
+</p>
 
 **BentoPDF** is a powerful, privacy-first, client-side PDF toolkit that is self hostable and allows you to manipulate, edit, merge, and process PDF files directly in your browser. No server-side processing is required, ensuring your files remain secure and private.
 
-![Docker Pulls](https://img.shields.io/docker/pulls/bentopdf/bentopdf) [![Ko-fi](https://img.shields.io/badge/Buy%20me%20a%20Coffee-yellow?logo=kofi&style=flat-square)](https://ko-fi.com/alio01) ![GitHub Stars](https://img.shields.io/github/stars/alam00000/bentopdf?style=social)
+[![Docker Downloads](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fghcr-badge.elias.eu.org%2Fapi%2Falam00000%2Fbentopdf%2Fbentopdf&query=%24.downloadCount&logo=docker&label=Docker%20Downloads&color=blue)](https://github.com/alam00000/bentopdf/pkgs/container/bentopdf) [![Ko-fi](https://img.shields.io/badge/Buy%20me%20a%20Coffee-yellow?logo=kofi&style=flat-square)](https://ko-fi.com/alio01) ![GitHub Stars](https://img.shields.io/github/stars/alam00000/bentopdf?style=social)
 [![Sponsor me on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ff69b4)](https://github.com/sponsors/alam00000)
 
 ![BentoPDF Tools](public/images/bentopdf-tools.png)
+
+---
+
+## Table of Contents
+
+- [Join Us on Discord](#-join-us-on-discord)
+- [Documentation](#-documentation)
+- [Licensing](#-licensing)
+- [Stargazers over time](#-stargazers-over-time)
+- [Thank You to Our Sponsors](#-thank-you-to-our-sponsors)
+- [Why BentoPDF?](#-why-bentopdf)
+- [Features / Tools Supported](#️-features--tools-supported)
+  - [Organize & Manage PDFs](#organize--manage-pdfs)
+  - [Edit & Modify PDFs](#edit--modify-pdfs)
+  - [Convert to PDF](#convert-to-pdf)
+  - [Convert from PDF](#convert-from-pdf)
+  - [Secure & Optimize PDFs](#secure--optimize-pdfs)
+- [Translations](#-translations)
+- [Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Quick Start](#-quick-start)
+  - [Static Hosting](#static-hosting-using-netlify-vercel-and-github-pages)
+  - [Self-Hosting Locally](#-self-hosting-locally)
+  - [Docker Compose / Podman Compose](#-run-with-docker-compose--podman-compose-recommended)
+  - [Podman Quadlet](#-podman-quadlet-systemd-integration)
+  - [Simple Mode](#-simple-mode-for-internal-use)
+  - [WASM Configuration](#wasm-configuration)
+  - [Air-Gapped / Offline Deployment](#air-gapped--offline-deployment)
+  - [Security Features](#-security-features)
+  - [Digital Signature CORS Proxy](#digital-signature-cors-proxy-required)
+  - [Version Management](#-version-management)
+  - [Development Setup](#-development-setup)
+- [Tech Stack & Background](#️-tech-stack--background)
+- [Roadmap](#️-roadmap)
+- [Contributing](#-contributing)
+- [Special Thanks](#special-thanks)
 
 ---
 
@@ -50,6 +91,19 @@ BentoPDF is **dual-licensed** to fit your needs:
 > **One-time purchase** · **Unlimited devices & users** · **Lifetime updates** · **No AGPL obligations**
 
 📖 For more details, see our [Licensing Page](https://bentopdf.com/licensing.html)
+
+### AGPL Components (Pre-configured via CDN)
+
+BentoPDF does **not** bundle AGPL-licensed processing libraries in its source code, but **pre-configures CDN URLs** so all features work out of the box with zero setup:
+
+| Component              | License  | Features Enabled                                                                                    |
+| ---------------------- | -------- | --------------------------------------------------------------------------------------------------- |
+| **PyMuPDF**            | AGPL-3.0 | PDF to Text/Markdown/SVG/DOCX, Extract Images/Tables, EPUB/MOBI/XPS conversion, Compression, Deskew |
+| **Ghostscript**        | AGPL-3.0 | PDF/A Conversion, Font to Outline                                                                   |
+| **CoherentPDF (CPDF)** | AGPL-3.0 | Merge, Split by Bookmarks, Table of Contents, PDF to/from JSON, Attachments                         |
+
+> [!TIP]
+> **Zero-config by default.** WASM modules are loaded at runtime from jsDelivr CDN. No manual configuration is needed. For custom deployments (air-gapped, self-hosted), see [WASM Configuration](#wasm-configuration) below.
 
 <hr>
 
@@ -247,22 +301,9 @@ You can run BentoPDF locally for development or personal use.
 - [npm](https://www.npmjs.com/) (or yarn/pnpm)
 - [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/install/) (for containerized setup)
 
-### 🚀 Quick Start with Docker
+### 🚀 Quick Start
 
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/K4AU2B)
-
-You can run BentoPDF directly from Docker Hub or GitHub Container Registry without cloning the repository:
-
-You can also watch the video on how to set it up 👉
-[BentoPDF Docker Setup](https://drive.google.com/file/d/1C4eJ2nqeaH__1Tlad-xuBHaF2Ha4fSBf/view?usp=drive_link)
-
-**Using Docker Hub:**
-
-```bash
-docker run -p 3000:8080 bentopdf/bentopdf:latest
-```
-
-**Using GitHub Container Registry:**
+Run BentoPDF instantly from GitHub Container Registry (Recommended):
 
 ```bash
 docker run -p 3000:8080 ghcr.io/alam00000/bentopdf:latest
@@ -270,11 +311,35 @@ docker run -p 3000:8080 ghcr.io/alam00000/bentopdf:latest
 
 Open your browser at: http://localhost:3000
 
-This is the fastest way to try BentoPDF without setting up a development environment.
+<details>
+<summary><b>Alternative: Using Docker Hub or Podman</b></summary>
+
+**Docker Hub:**
+
+```bash
+docker run -p 3000:8080 bentopdfteam/bentopdf:latest
+```
+
+**Podman (GHCR):**
+
+```bash
+podman run -p 3000:8080 ghcr.io/alam00000/bentopdf:latest
+```
+
+**Podman (Docker Hub):**
+
+```bash
+podman run -p 3000:8080 docker.io/bentopdfteam/bentopdf:latest
+```
+
+> [!NOTE]
+> All `docker` commands in this documentation work with Podman by replacing `docker` with `podman`.
+
+</details>
 
 ### Static Hosting using Netlify, Vercel, and GitHub Pages
 
-It is very straightforward to host your own instance of BentoPDF using a static web page hosting service. Plus, services such as Netlify, Vercel, and GitHub Pages all offer a free tier for getting started. See [Static Hosting](https://github.com/alam00000/bentopdf/blob/main/STATIC-HOSTING.md)) for details.
+It is very straightforward to host your own instance of BentoPDF using a static web page hosting service. Plus, services such as Netlify, Vercel, and GitHub Pages all offer a free tier for getting started. See [Static Hosting](https://github.com/alam00000/bentopdf/blob/main/STATIC-HOSTING.md) for details.
 
 ### 🏠 Self-Hosting Locally
 
@@ -301,7 +366,8 @@ npx http-server -c-1
 
 The website will be accessible at: `http://localhost:8080/`
 
-> **Note:** The `-c-1` flag disables caching for development.
+> [!NOTE]
+> The `-c-1` flag disables caching for development.
 
 **Build from Source (Advanced):**
 
@@ -375,6 +441,110 @@ npm run build
 - Local files are **always included** as automatic fallback
 - If CDN fails then it falls back to local files
 
+<h3 id="wasm-configuration">⚙️ WASM Configuration</h3>
+
+Advanced PDF features (PyMuPDF, Ghostscript, CoherentPDF) are pre-configured to load from jsDelivr CDN via environment variables. This means **all features work out of the box** — no manual setup needed.
+
+The default URLs are set in `.env.production`:
+
+```bash
+VITE_WASM_PYMUPDF_URL=https://cdn.jsdelivr.net/npm/@bentopdf/pymupdf-wasm@0.11.14/
+VITE_WASM_GS_URL=https://cdn.jsdelivr.net/npm/@bentopdf/gs-wasm/assets/
+VITE_WASM_CPDF_URL=https://cdn.jsdelivr.net/npm/coherentpdf/dist/
+```
+
+To override via Docker build args:
+
+```bash
+docker build \
+  --build-arg VITE_WASM_PYMUPDF_URL=https://your-server.com/pymupdf/ \
+  --build-arg VITE_WASM_GS_URL=https://your-server.com/gs/ \
+  --build-arg VITE_WASM_CPDF_URL=https://your-server.com/cpdf/ \
+  -t bentopdf .
+```
+
+To disable a module (require manual user config via Advanced Settings), set its variable to an empty string.
+
+Users can also override these defaults per-browser via **Advanced Settings** in the UI — user overrides take priority over the environment defaults.
+
+> [!IMPORTANT]
+> These URLs are baked into the JavaScript at **build time**. The WASM files themselves are downloaded by the **user's browser** at runtime — Docker does not download them during the build.
+
+<h3 id="air-gapped--offline-deployment">🔒 Air-Gapped / Offline Deployment</h3>
+
+For networks with no internet access (government, healthcare, financial, etc.), you need to prepare everything on a machine **with** internet, then transfer it into the isolated network.
+
+**Step 1: Download the WASM packages** (on a machine with internet)
+
+```bash
+npm pack @bentopdf/pymupdf-wasm@0.11.14
+npm pack @bentopdf/gs-wasm
+npm pack coherentpdf
+```
+
+This creates three `.tgz` files in your current directory.
+
+**Step 2: Build the Docker image with internal URLs** (on a machine with internet)
+
+Point the WASM URLs to where you'll host the files inside the air-gapped network:
+
+```bash
+# Clone and build
+git clone https://github.com/alam00000/bentopdf.git
+cd bentopdf
+
+docker build \
+  --build-arg VITE_WASM_PYMUPDF_URL=https://internal-server.example.com/wasm/pymupdf/ \
+  --build-arg VITE_WASM_GS_URL=https://internal-server.example.com/wasm/gs/ \
+  --build-arg VITE_WASM_CPDF_URL=https://internal-server.example.com/wasm/cpdf/ \
+  -t bentopdf .
+```
+
+**Step 3: Export the Docker image**
+
+```bash
+docker save bentopdf -o bentopdf.tar
+```
+
+**Step 4: Transfer into the air-gapped network**
+
+Copy these files via USB drive, internal artifact repository, or approved transfer method:
+
+- `bentopdf.tar` — the Docker image
+- `bentopdf-pymupdf-wasm-0.11.14.tgz` — PyMuPDF WASM package
+- `bentopdf-gs-wasm-*.tgz` — Ghostscript WASM package
+- `coherentpdf-*.tgz` — CoherentPDF WASM package
+
+**Step 5: Set up inside the air-gapped network**
+
+```bash
+# Load the Docker image
+docker load -i bentopdf.tar
+
+# Extract the WASM packages
+mkdir -p /var/www/wasm/pymupdf /var/www/wasm/gs /var/www/wasm/cpdf
+tar xzf bentopdf-pymupdf-wasm-0.11.14.tgz -C /var/www/wasm/pymupdf --strip-components=1
+tar xzf bentopdf-gs-wasm-*.tgz -C /var/www/wasm/gs --strip-components=1
+tar xzf coherentpdf-*.tgz -C /var/www/wasm/cpdf --strip-components=1
+
+# Serve the WASM files on your internal web server (e.g., nginx, Apache)
+# Make sure they're accessible at the URLs you configured in Step 2
+
+# Run BentoPDF
+docker run -d -p 3000:8080 --restart unless-stopped bentopdf
+```
+
+Users open their browser, access BentoPDF on the internal network, and the browser fetches WASM files from the internal server. No internet required at any point.
+
+> [!NOTE]
+> If you're building from source instead of Docker, set the variables in `.env.production` before running `npm run build`:
+>
+> ```bash
+> VITE_WASM_PYMUPDF_URL=https://internal-server.example.com/wasm/pymupdf/
+> VITE_WASM_GS_URL=https://internal-server.example.com/wasm/gs/
+> VITE_WASM_CPDF_URL=https://internal-server.example.com/wasm/cpdf/
+> ```
+
 **Subdirectory Hosting:**
 
 BentoPDF can also be hosted from a subdirectory (e.g., `example.com/tools/bentopdf/`):
@@ -426,12 +596,12 @@ docker build \
 docker run -p 3000:8080 bentopdf-simple
 ```
 
-> **Important**:
+> [!IMPORTANT]
 >
 > - Always include trailing slashes in `BASE_URL` (e.g., `/bentopdf/` not `/bentopdf`)
 > - The default value is `/` for root deployment
 
-### 🚀 Run with Docker Compose (Recommended)
+### 🚀 Run with Docker Compose / Podman Compose (Recommended)
 
 For a more robust setup with auto-restart capabilities:
 
@@ -440,7 +610,8 @@ For a more robust setup with auto-restart capabilities:
 ```yaml
 services:
   bentopdf:
-    image: bentopdf/bentopdf:latest
+    image: ghcr.io/alam00000/bentopdf:latest # Recommended
+    # image: bentopdfteam/bentopdf:latest     # Alternative: Docker Hub
     container_name: bentopdf
     ports:
       - '3000:8080'
@@ -450,10 +621,47 @@ services:
 2. **Start the application**:
 
 ```bash
+# Docker Compose
 docker-compose up -d
+
+# Podman Compose
+podman-compose up -d
 ```
 
 The application will be available at `http://localhost:3000`.
+
+### 🐧 Podman Quadlet (Systemd Integration)
+
+For Linux production deployments, you can run BentoPDF as a systemd service using [Podman Quadlet](https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html).
+
+Create `~/.config/containers/systemd/bentopdf.container`:
+
+```ini
+[Unit]
+Description=BentoPDF - Privacy-first PDF toolkit
+After=network-online.target
+
+[Container]
+Image=ghcr.io/alam00000/bentopdf:latest
+ContainerName=bentopdf
+PublishPort=3000:8080
+AutoUpdate=registry
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
+```
+
+Then enable and start:
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now bentopdf
+```
+
+For detailed Quadlet configuration, see [Self-Hosting Docker Guide](https://bentopdf.com/docs/self-hosting/docker).
 
 ### 🏢 Simple Mode for Internal Use
 
@@ -557,7 +765,8 @@ npx wrangler deploy
 
 #### HMAC Signature Verification (Optional)
 
-> **⚠️ Security Warning:** Client-side secrets can be extracted from bundled JavaScript. For production deployments with sensitive requirements, use your own backend server to proxy requests instead of embedding secrets in frontend code.
+> [!WARNING]
+> Client-side secrets can be extracted from bundled JavaScript. For production deployments with sensitive requirements, use your own backend server to proxy requests instead of embedding secrets in frontend code.
 
 BentoPDF uses client-side HMAC as a deterrent against casual abuse, but accepts this tradeoff due to its fully client-side architecture. To enable:
 
@@ -574,19 +783,19 @@ VITE_CORS_PROXY_SECRET=your-secret npm run build
 
 ### 📦 Version Management
 
-BentoPDF supports semantic versioning with multiple Docker tags available on both Docker Hub and GitHub Container Registry:
+BentoPDF supports semantic versioning with multiple container tags available:
 
-**Docker Hub:**
-
-- **Latest**: `bentopdf/bentopdf:latest`
-- **Specific Version**: `bentopdf/bentopdf:1.0.0`
-- **Version with Prefix**: `bentopdf/bentopdf:v1.0.0`
-
-**GitHub Container Registry:**
+**GitHub Container Registry (Recommended):**
 
 - **Latest**: `ghcr.io/alam00000/bentopdf:latest`
 - **Specific Version**: `ghcr.io/alam00000/bentopdf:1.0.0`
 - **Version with Prefix**: `ghcr.io/alam00000/bentopdf:v1.0.0`
+
+**Docker Hub:**
+
+- **Latest**: `bentopdfteam/bentopdf:latest`
+- **Specific Version**: `bentopdfteam/bentopdf:1.0.0`
+- **Version with Prefix**: `bentopdfteam/bentopdf:v1.0.0`
 
 #### Quick Release
 
@@ -643,7 +852,8 @@ For detailed release instructions, see [RELEASE.md](RELEASE.md).
 
    The application will be available at `http://localhost:3000`.
 
-   > **Note:** After making any local changes to the code, rebuild the Docker image using:
+   > [!NOTE]
+   > After making any local changes to the code, rebuild the Docker image using:
 
    ```bash
    docker-compose -f docker-compose.dev.yml up --build -d
@@ -661,7 +871,8 @@ BentoPDF was originally built using **HTML**, **CSS**, and **vanilla JavaScript*
 - **TypeScript**: For type safety and an improved developer experience.
 - **Tailwind CSS**: For rapid and consistent UI development.
 
-> **Note:** Some parts of the codebase still use legacy structures from the original implementation. Contributors should expect gradual updates as testing and refactoring continue.
+> [!NOTE]
+> Some parts of the codebase still use legacy structures from the original implementation. Contributors should expect gradual updates as testing and refactoring continue.
 
 ---
 
@@ -724,6 +935,8 @@ Documentation files are in the `docs/` folder:
 
 BentoPDF wouldn't be possible without the amazing open-source tools and libraries that power it. We'd like to extend our heartfelt thanks to the creators and maintainers of:
 
+**Bundled Libraries:**
+
 - **[PDFLib.js](https://pdf-lib.js.org/)** – For enabling powerful client-side PDF manipulation.
 - **[PDF.js](https://mozilla.github.io/pdf.js/)** – For the robust PDF rendering engine in the browser.
 - **[PDFKit](https://pdfkit.org/)** – For creating and editing PDFs with ease.
@@ -731,10 +944,16 @@ BentoPDF wouldn't be possible without the amazing open-source tools and librarie
 - **[Cropper.js](https://fengyuanchen.github.io/cropperjs/)** – For intuitive image cropping functionality.
 - **[Vite](https://vitejs.dev/)** – For lightning-fast development and build tooling.
 - **[Tailwind CSS](https://tailwindcss.com/)** – For rapid, flexible, and beautiful UI styling.
-- **[qpdf](https://github.com/qpdf/qpdf)** and **[qpdf-wasm](https://github.com/neslinesli93/qpdf-wasm)**– A powerful command-line tool and library for inspecting, repairing, and transforming PDF file ported to wasm
-- **[cpdf](https://www.coherentpdf.com/)** – For content preserving pdf operations.
+- **[qpdf](https://github.com/qpdf/qpdf)** and **[qpdf-wasm](https://github.com/neslinesli93/qpdf-wasm)** – For inspecting, repairing, and transforming PDF files.
 - **[LibreOffice](https://www.libreoffice.org/)** – For powerful document conversion capabilities.
-- **[PyMuPDF](https://github.com/pymupdf/PyMuPDF)** – For high-performance PDF manipulation and data extraction.
-- **[Ghostscript(GhostPDL)](https://github.com/ArtifexSoftware/ghostpdl)** – Needs no Introduction.
+
+**AGPL Libraries (Pre-configured via CDN):**
+
+- **[CoherentPDF (cpdf)](https://www.coherentpdf.com/)** – For content-preserving PDF operations. _(AGPL-3.0)_
+- **[PyMuPDF](https://github.com/pymupdf/PyMuPDF)** – For high-performance PDF manipulation and data extraction. _(AGPL-3.0)_
+- **[Ghostscript (GhostPDL)](https://github.com/ArtifexSoftware/ghostpdl)** – For PDF/A conversion and font outlining. _(AGPL-3.0)_
+
+> [!NOTE]
+> AGPL-licensed libraries are not bundled in BentoPDF's source code. They are loaded at runtime from CDN (pre-configured) and can be overridden via environment variables or Advanced Settings.
 
 Your work inspires and empowers developers everywhere. Thank you for making open-source amazing!

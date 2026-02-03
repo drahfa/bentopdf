@@ -25,6 +25,7 @@ const ALLOWED_PATTERNS = [
 const ALLOWED_ORIGINS = [
     'https://www.bentopdf.com',
     'https://bentopdf.com',
+    'https://sitipdf.drahfa.com',
 ];
 
 const BLOCKED_DOMAINS = [

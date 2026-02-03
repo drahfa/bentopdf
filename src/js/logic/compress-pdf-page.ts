@@ -8,8 +8,9 @@ import {
 import { state } from '../state.js';
 import { createIcons, icons } from 'lucide';
 import { PDFDocument } from 'pdf-lib';
-import { PyMuPDF } from '@bentopdf/pymupdf-wasm';
-import { getWasmBaseUrl } from '../config/wasm-cdn-config.js';
+import { isWasmAvailable, getWasmBaseUrl } from '../config/wasm-cdn-config.js';
+import { showWasmRequiredDialog } from '../utils/wasm-provider.js';
+import { loadPyMuPDF, isPyMuPDFAvailable } from '../utils/pymupdf-loader.js';
 import * as pdfjsLib from 'pdfjs-dist';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -60,8 +61,8 @@ async function performCondenseCompression(
     removeThumbnails?: boolean;
   }
 ) {
-  const pymupdf = new PyMuPDF(getWasmBaseUrl('pymupdf'));
-  await pymupdf.load();
+  // Load PyMuPDF dynamically from user-provided URL
+  const pymupdf = await loadPyMuPDF();
 
   const preset =
     CONDENSE_PRESETS[level as keyof typeof CONDENSE_PRESETS] ||
@@ -118,6 +119,15 @@ async function performCondenseCompression(
 
       const result = await pymupdf.compressPdf(fileBlob, fallbackOptions);
       return { ...result, usedFallback: true };
+    }
+
+    if (
+      errorMessage.includes('closed or encrypted') ||
+      errorMessage.includes('encrypted')
+    ) {
+      throw new Error(
+        'This PDF is encrypted or password-protected. Please remove the password first using the Unlock PDF tool, then try compressing again.'
+      );
     }
 
     throw new Error(`PDF compression failed: ${errorMessage}`);
@@ -387,6 +397,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (state.files.length === 0) {
         showAlert('No Files', 'Please select at least one PDF file.');
         hideLoader();
+        return;
+      }
+
+      // Check WASM availability for Condense mode
+      const algorithm = (
+        document.getElementById('compression-algorithm') as HTMLSelectElement
+      ).value;
+      if (algorithm === 'condense' && !isPyMuPDFAvailable()) {
+        showWasmRequiredDialog('pymupdf');
         return;
       }
 
