@@ -1,3 +1,6 @@
+# Windows device name artifacts
+nul
+
 # Logs
 logs
 *.log

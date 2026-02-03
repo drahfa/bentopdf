@@ -7,6 +7,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import '../css/styles.css';
 import { formatShortcutDisplay, formatStars } from './utils/helpers.js';
 import { APP_VERSION } from '../version.js';
+import { initThemeToggle } from './utils/theme-toggle.js';
 import {
   initI18n,
   applyTranslations,
@@ -17,6 +18,7 @@ import {
 } from './i18n/index.js';
 
 const init = async () => {
+  initThemeToggle();
   await initI18n();
   injectLanguageSwitcher();
   applyTranslations();
