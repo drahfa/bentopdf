@@ -145,6 +145,18 @@ async function handleFiles(files: FileList) {
         const docId = data?.id;
         const docName = data?.name;
         if (!docId) return;
+
+        // Set default zoom to 200%
+        setTimeout(() => {
+          try {
+            const viewPlugin = registry.getPlugin('view').provides();
+            if (viewPlugin && viewPlugin.setZoom) {
+              viewPlugin.setZoom(2.0);
+            }
+          } catch (e) {
+            console.warn('Could not set zoom:', e);
+          }
+        }, 100);
         const pendingEntry = fileDisplayArea.querySelector(
           `[data-pending-name="${CSS.escape(docName)}"]`
         ) as HTMLElement;

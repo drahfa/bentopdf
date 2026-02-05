@@ -4,6 +4,13 @@ export const categories = [
     name: 'Popular Tools',
     tools: [
       {
+        href: import.meta.env.BASE_URL + 'edit-pdf.html',
+        name: 'PDF Editor',
+        icon: 'ph-pencil-simple',
+        subtitle:
+          'Annotate, highlight, redact, comment, add shapes/images, search, and view PDFs',
+      },
+      {
         href: import.meta.env.BASE_URL + 'pdf-multi-tool.html',
         name: 'PDF Multi Tool',
         icon: 'ph-pencil-ruler',
@@ -27,13 +34,6 @@ export const categories = [
         name: 'Compress PDF',
         icon: 'ph-lightning',
         subtitle: 'Reduce the file size of your PDF.',
-      },
-      {
-        href: import.meta.env.BASE_URL + 'edit-pdf.html',
-        name: 'PDF Editor',
-        icon: 'ph-pencil-simple',
-        subtitle:
-          'Annotate, highlight, redact, comment, add shapes/images, search, and view PDFs',
       },
       {
         href: import.meta.env.BASE_URL + 'jpg-to-pdf.html',

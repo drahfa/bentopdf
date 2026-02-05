@@ -130,9 +130,18 @@
           view PDFs.
         </p>
 
+        <div id="file-display-area" class="mt-4 space-y-2"></div>
+
+        <div id="embed-pdf-wrapper" class="hidden mt-6">
+          <div
+            id="embed-pdf-container"
+            class="w-full h-[75vh] border border-gray-600 rounded-lg"
+          ></div>
+        </div>
+
         <div
           id="drop-zone"
-          class="relative flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer bg-gray-900 hover:bg-gray-700 transition-colors duration-300"
+          class="relative flex flex-col items-center justify-center w-full h-48 md:h-64 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer bg-gray-900 hover:bg-gray-700 transition-colors duration-300 mt-6"
         >
           <div class="flex flex-col items-center justify-center pt-5 pb-6">
             <i
@@ -159,15 +168,6 @@
             accept="application/pdf"
             multiple
           />
-        </div>
-
-        <div id="file-display-area" class="mt-4 space-y-2"></div>
-
-        <div id="embed-pdf-wrapper" class="hidden mt-6">
-          <div
-            id="embed-pdf-container"
-            class="w-full h-[75vh] border border-gray-600 rounded-lg"
-          ></div>
         </div>
       </div>
     </div>
