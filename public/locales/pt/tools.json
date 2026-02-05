@@ -514,7 +514,7 @@
   },
   "digitalSignPdf": {
     "name": "Assinatura Digital PDF",
-    "pageTitle": "Assinatura Digital PDF - Adicionar Assinatura Criptográfica | BentoPDF",
+    "pageTitle": "Assinatura Digital PDF - Adicionar Assinatura Criptográfica | SitiPDF",
     "subtitle": "Adicione uma assinatura digital criptográfica ao seu PDF usando certificados X.509. Suporta formatos PKCS#12 (.pfx, .p12) e PEM. Sua chave privada nunca sai do seu navegador.",
     "certificateSection": "Certificado",
     "uploadCert": "Carregar certificado (.pfx, .p12)",
@@ -536,7 +536,7 @@
   },
   "validateSignaturePdf": {
     "name": "Validar Assinatura PDF",
-    "pageTitle": "Validar Assinatura PDF - Verificar Assinaturas Digitais | BentoPDF",
+    "pageTitle": "Validar Assinatura PDF - Verificar Assinaturas Digitais | SitiPDF",
     "subtitle": "Verifique assinaturas digitais em seus arquivos PDF. Verifique a validade do certificado e a integridade do documento."
   },
   "pdfToWord": {

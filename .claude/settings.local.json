@@ -22,7 +22,10 @@
       "Bash(cloudflared tunnel info:*)",
       "Bash(cloudflared tunnel route dns:*)",
       "Bash(cloudflared tunnel run:*)",
-      "WebFetch(domain:sitipdf.drahfa.com)"
+      "WebFetch(domain:sitipdf.drahfa.com)",
+      "Bash(npx:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
